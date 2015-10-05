@@ -1,0 +1,41 @@
+# the repo is here:
+https://github.com/NYULMC-GTC/pipelines
+
+# to clone the repo to the server, use this:
+git clone https://YOUR_GITHUB_USERNAME@github.com/NYULMC-GTC/pipelines.git
+
+# manage your local clone of the git repo from the main dir, not the subdirectories
+# even if your changes are made in the subdirs
+
+# check for changes
+git status
+
+# add the changed files to the staging area
+git add file1 file2
+
+# commit the changes
+git commit -m "Brief description of changes"
+
+# if you forget to include -m you'll be prompted to type a message inthe default text editor
+# it might be vi; if you get stuck in vi then you can exit by typing 
+:q!<enter>
+(you might need to hit ESC a few times first)
+
+# push the new commits
+git push origin master
+
+# don't forget to pull for new commits
+git pull
+
+# you can also make changes directly on the GitHub site, just remember to pull them down to your
+# local repo clone afterwards
+# git push pull often to stay up to date
+
+# also, make sure to set your git username and email on the server/local machine
+# https://help.github.com/articles/setting-your-username-in-git/
+# and make sure that the email you set is added as a registered email in your account
+# https://github.com/settings/emails
+
+# need more git/GitHub help? 
+# https://help.github.com/
+# https://help.github.com/categories/setup/
