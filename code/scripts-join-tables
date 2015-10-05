@@ -1,0 +1,21 @@
+#!/bin/tcsh
+
+##
+## USAGE: scripts-join-tables TABLE-1 TABLE-2
+##
+
+if ($#argv != 2) then
+  grep '^##' $0
+  exit
+endif
+
+set t1 = $1
+set t2 = $2
+
+set header = "`head -1 $t1` `head -1 $t2 | cut -f2-`"
+echo $header | tr ' ' '\t'
+set t1_sorted = `scripts-create-temp`
+cat $t1 | scripts-skipn 1 | sort >! $t1_sorted
+cat $t2 | scripts-skipn 1 | sort | join -t '	' -a1 $t1_sorted - 
+rm -f $t1_sorted
+

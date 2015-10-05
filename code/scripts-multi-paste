@@ -1,0 +1,22 @@
+#!/bin/tcsh
+
+##
+## USAGE: multi_paste FILE1 ...
+##
+
+if ($#argv == 0) then
+  grep '^##' $0
+  exit
+endif
+
+set prog = `readlink -f $0`
+set n = $#argv
+set f = $1
+
+if ($n == 1) then
+  cat $f
+else
+  shift 
+  $prog $* | join -t '	' $f -
+endif
+

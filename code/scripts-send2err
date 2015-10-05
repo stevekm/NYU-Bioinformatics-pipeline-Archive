@@ -1,0 +1,15 @@
+#!/bin/tcsh -f
+
+##
+## USAGE: send2err <INPUT>|INPUT
+##
+
+if ($#argv == 0) then
+  set msg = `head -1`
+  sh -c "echo $msg 1>&2"
+else
+  set x = "echo $1 1>&2"
+  sh -c "$x"
+endif
+
+

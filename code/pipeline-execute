@@ -1,0 +1,15 @@
+#!/bin/tcsh
+
+##
+## USAGE: pipeline-execute PROJECT-NAME
+##
+
+if ($#argv != 1) then
+  grep '^##' $0
+  exit
+endif
+
+set project = $1
+
+qsub -cwd -m e -M aristotelis.tsirigos@nyumc.org -N $project ./run
+

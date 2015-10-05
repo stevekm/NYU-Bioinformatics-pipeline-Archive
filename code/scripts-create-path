@@ -1,0 +1,24 @@
+#!/bin/tcsh
+
+##
+## USAGE: scripts-create-path FILE
+##
+
+if ($#argv != 1) then
+  grep '^##' $0
+  exit
+endif
+
+set f = $1
+
+set D = `echo $f | sed 's/\/[^/]\+$//'`
+set n = `echo $D | tr -cd '/' | wc -c`
+@ n ++
+set k = 1
+while ($k <= $n)
+  set d = `echo $D | cut -d'/' -f-$k`
+  if (! -e $d) mkdir $d
+  @ k ++
+end
+
+

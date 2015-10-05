@@ -1,0 +1,22 @@
+#!/bin/tcsh
+
+##
+## USAGE: scripts-print-cmdline PROG ARGV
+##
+
+if ($#argv < 1) then
+  grep '^##' $0
+  exit
+endif
+
+foreach a ($argv:q)
+  if (`echo $a | grep -cE ' |>|<|\(|\)'` == 0) then
+    echo -n $a
+  else
+    echo -n "'$a'"
+  endif
+  echo -n ' '
+end
+echo ''
+
+

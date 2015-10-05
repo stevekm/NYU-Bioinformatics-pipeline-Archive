@@ -1,0 +1,17 @@
+#!/bin/tcsh
+
+##
+## USAGE: pipeline-checkout SOURCE-DIR TARGET-DIR
+##
+
+if ($#argv != 2) then
+  grep '^##' $0
+  exit
+endif
+
+set src = $1
+set trg = $2
+
+rsync -auv --exclude=results $src/ $trg
+
+
