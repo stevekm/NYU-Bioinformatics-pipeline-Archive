@@ -1,0 +1,2 @@
+human	hs
+mouse	mm

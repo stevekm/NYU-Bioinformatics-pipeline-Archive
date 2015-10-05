@@ -1,0 +1,46 @@
+#!/bin/tcsh
+
+##
+## USAGE: run.pca
+##
+
+if ($#argv != 0) then
+  grep '^##' $0
+  exit
+endif
+
+set sheet = inputs/sample-sheet.tsv  # TODO: the code below will not work for multi-group assignments
+
+scripts-send2err "=== Running PCA ============="
+scripts-create-path results/logs/
+set inpdir = matrices/results
+set D = `cd $inpdir; ls -1d matrices.* | grep -E 'nbins=1\.|nbins=1$'`
+set jid = ()
+foreach d ($D)
+  set out = results/`echo $d | sed 's/^matrices\./pca./'`
+  set mat = $out/matrix.tsv
+  set lab = $out/labels.txt
+  scripts-send2err "- out = $out"
+  if (! -e $out) then
+    scripts-create-path $out/
+    if (! -e $mat) then
+      cat $sheet | grep -viE '^#|input' | cut -f2,4 | awk '{print $2":"$1}' >! $lab                                         # TODO: exclude Input??
+      set files = `cat $sheet | grep -viE '^#|input' | cut -f2 | awk -v pref=$inpdir/$d/ '{print pref"matrix."$1".tsv"}'`   # TODO: exclude Input??
+      scripts-multi-paste $files | grep -v '^chr[MYX]' >! $mat                                                              # TODO: exclude chrM/X/Y?
+    else
+      scripts-send2err "Warning: $mat already exists, skipping..."
+    endif  
+    set jid = ($jid `scripts-qsub-run results/logs/job.pca 1 scripts-perform-pca.r -v -o $out -L $lab --show-text --use-short-names $mat`)
+  else 
+    scripts-send2err "Warning: $out already exists, skipping..."
+  endif
+end
+
+scripts-send2err "Waiting for all jobs to finish..."
+scripts-qsub-wait "$jid"
+scripts-send2err "Done."
+
+
+
+
+
