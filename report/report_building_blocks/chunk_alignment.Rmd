@@ -1,0 +1,51 @@
+
+\section{Alignment}
+\subsection{Groups}
+In this section, the alignment data will be displayed. Here, we will display a table with grouping information.
+
+```{r,results='asis'}
+require(xtable)
+options(xtable.comment = FALSE) # make sure to include this if using .Rmd
+
+# the location of the file          
+# /ifs/home/kellys04/pipelines/aris_pipelines/chipseq_standard.CTCF_example/__01a-alignments/inputs/groups.txt
+
+# for local compiling & debugging 
+# ALGN_GROUPS<-read.delim(file = "./groups.txt",header = F,sep = "\t", fill = T,text = T)
+
+# use this command in the real document
+ALGN_GROUPS<-read.delim(file = "./aris_pipelines/chipseq_standard.CTCF_example/__01a-alignments/inputs/groups.txt",
+                        header = F,sep = "\t", fill = T,text = T)
+
+print(xtable(ALGN_GROUPS),sanitize.text.function=identity)
+
+# this comparispons table could probably be inverted for better analysis; treat columns as categories, rows as entries
+# also split the second column by whitespace
+```
+
+We can make note of some significant entries here. 
+\begin{itemize}
+\item Samples in the `r ALGN_GROUPS[1,1]` groups recieved xyz treatment before sequencing
+\item Samples `r ALGN_GROUPS[2,2]` were very hard to process, etc.
+\end{itemize}
+
+\subsection{Comparisions}
+
+Next, we will display a table with comparisons. 
+
+```{r,results='asis'}
+
+# the location of the file          
+# /ifs/home/kellys04/pipelines/aris_pipelines/chipseq_standard.CTCF_example/__01a-alignments/inputs/
+
+
+# for local compiling & debugging 
+# ALGN_COMPR<-read.delim(file = "./comparisons.txt",header = F,sep = "\t", fill = T,text = T)
+
+ALGN_COMPR<-read.delim(file = "./aris_pipelines/chipseq_standard.CTCF_example/__01a-alignments/inputs/comparisons.txt",
+                        header = F,sep = "\t", fill = T,text = T)
+
+print(xtable(ALGN_GROUPS),sanitize.text.function=identity)
+```
+
+
