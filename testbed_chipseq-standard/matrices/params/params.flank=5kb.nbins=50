@@ -1,0 +1,8 @@
+
+set regions = peaks/results/peaks.macs_broad/peaks.*/peaks.bed
+set win = 0
+set flank = 5000
+set nbins = 50
+
+
+

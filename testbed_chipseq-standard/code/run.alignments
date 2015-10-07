@@ -1,0 +1,37 @@
+#!/bin/tcsh
+
+##
+## USAGE: run.alignments
+##
+
+if ($#argv != 0) then
+  grep '^##' $0
+  exit
+endif
+
+scripts-create-path results/
+
+scripts-send2err "=== Aligning reads ============="
+set params = params/params.bowtie2.tcsh
+set threads = 8
+set jid = ()
+set Q = (inputs/fastq-or-alignments/*.fastq inputs/fastq-or-alignments/*.fastq.gz inputs/fastq-or-alignments/*.bam)
+foreach q ($Q)
+  set qname = `echo $q | sed 's/.*\///' | sed 's/\.gz$//' | sed 's/\.[^.]\+$//'`
+  set outdir = results/align.$qname
+  if (! -e $outdir) then
+    rm -f $qname.bam
+    scripts-send2err "Generating alignments for sample $qname..."
+    scripts-create-path $outdir/ 
+    set jid = ($jid `scripts-qsub-run $outdir/job.align $threads ./code/chipseq-align $outdir $params $q`)
+  else 
+    scripts-send2err "Warning: $outdir or $outdir.bam already exists, skipping..."
+  endif
+end
+
+scripts-send2err "Waiting for all jobs to finish..."
+scripts-qsub-wait "$jid"
+scripts-send2err "Done."
+
+
+

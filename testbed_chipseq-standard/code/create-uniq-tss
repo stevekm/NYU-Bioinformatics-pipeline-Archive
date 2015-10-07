@@ -1,0 +1,13 @@
+#!/bin/tcsh
+
+##
+## USAGE: create-uniq-tss REGIONS-BED
+##
+
+if ($#argv != 1) then
+  grep '^##' $0
+  exit
+endif
+
+
+#[ALTERNATIVE]# cat $regions | genomic_regions reg | genomic_regions pos -op 5p | sortreg | genomic_regions link -s -d 50 --label-func ';' | genomic_regions center | genomic_regions pos -op 5p >! tss.unique.reg

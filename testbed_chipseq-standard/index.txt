@@ -1,0 +1,11 @@
+alignments
+
+peaks
+
+matrices
+
+pca
+
+easydiff
+
+#heatmaps
