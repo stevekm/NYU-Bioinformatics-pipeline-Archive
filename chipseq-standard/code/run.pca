@@ -10,6 +10,9 @@ if ($#argv != 0) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 set sheet = inputs/sample-sheet.tsv  # TODO: the code below will not work for multi-group assignments
 
 scripts-send2err "=== Running PCA ============="
@@ -31,7 +34,7 @@ foreach d ($D)
     else
       scripts-send2err "Warning: $mat already exists, skipping..."
     endif  
-    set jid = ($jid `scripts-qsub-run results/logs/job.pca 1 ../../code/scripts-perform-pca.r -v -o $out -L $lab --show-text --use-short-names $mat`)
+    set jid = ($jid `scripts-qsub-run results/logs/job.pca 1 scripts-perform-pca.r -v -o $out -L $lab --show-text --use-short-names $mat`)
   else 
     scripts-send2err "Warning: $out already exists, skipping..."
   endif

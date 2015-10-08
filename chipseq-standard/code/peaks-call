@@ -9,11 +9,18 @@ if (($#argv < 3) || ($#argv > 4)) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 set out = $1
 set param_script = $2
 set treatment_aln = ($3)
 set control_aln = ($4)
 
+# set path
+set path = (./code/code $path)
+
+# set parameters
 source $param_script
 scripts-send2err "-- Parameters: "
 scripts-send2err "- macs = $macs_params"

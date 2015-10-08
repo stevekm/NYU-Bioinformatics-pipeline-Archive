@@ -9,6 +9,9 @@ if ($#argv != 2) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 set out = $1
 set peaks = ($2)
 

@@ -9,6 +9,9 @@ if ($#argv != 0) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 set sheet = sample-sheet.tsv
 set src = `cut -f1 $sheet`
 set trg = `cut -f2 $sheet`

@@ -15,8 +15,10 @@ set reads = ($3)
 set ref = $4
 set nbins = $5
 set op = $6
-
 if ($op == '') set op = hits
+
+# set path
+set path = (./code/code $path)
 
 set reads = `echo $reads | tr ' ' ','`
 if (`genomic_regions reg $ref | cut -f1 | sort | uniq -d | wc -l` > 0) then

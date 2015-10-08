@@ -11,6 +11,9 @@ if ($#argv < 3) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 set out_dir = $1
 set params = $2
 if (`echo $3 | grep -c '\.bam$'` == 1) then

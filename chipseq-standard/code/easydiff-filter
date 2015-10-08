@@ -9,6 +9,9 @@ if ($#argv != 2) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 set d = $1
 set params = "$2"
 

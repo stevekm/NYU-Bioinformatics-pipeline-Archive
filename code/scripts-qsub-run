@@ -12,13 +12,13 @@ endif
 
 set jpref = $1
 set nthreads = $2
-set prog = $3
+set prog = `which $3`
 shift
 shift
 shift
 
 set script = `mktemp $jpref.XXXXXXXX`
-scripts-print-cmdline $prog $argv:q >! $script
+scripts-print-cmdline $prog $argv:q >> $script
 qsub -cwd -o $script.out -e $script.err -pe threaded $nthreads ./$script >! $script.jid
 cat $script.jid | cut -d' ' -f3
 

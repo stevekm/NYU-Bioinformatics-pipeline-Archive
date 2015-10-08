@@ -9,5 +9,8 @@ if ($#argv != 1) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
 
 #[ALTERNATIVE]# cat $regions | genomic_regions reg | genomic_regions pos -op 5p | sortreg | genomic_regions link -s -d 50 --label-func ';' | genomic_regions center | genomic_regions pos -op 5p >! tss.unique.reg

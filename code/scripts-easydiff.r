@@ -187,8 +187,8 @@ diff_peaks.store <- function(x,y,w_signal,w_ref,diffpeaks,out_prefix)
   write.table(scores,score_file,quote=F,row.names=F,col.names=T,sep='\t')
   
   # save gain/loss reg files
-  write.table(scores[diffpeaks$gain_significant,c(1,2)],paste(out_prefix,'.gain',sep=''),quote=F,row.names=F,col.names=F,sep='\t');
-  write.table(scores[diffpeaks$loss_significant,c(1,2)],paste(out_prefix,'.loss',sep=''),quote=F,row.names=F,col.names=F,sep='\t');
+  write.table(scores[diffpeaks$gain_significant,c(1,2),drop=FALSE],paste(out_prefix,'.gain',sep=''),quote=F,row.names=F,col.names=F,sep='\t');
+  write.table(scores[diffpeaks$loss_significant,c(1,2),drop=FALSE],paste(out_prefix,'.loss',sep=''),quote=F,row.names=F,col.names=F,sep='\t');
   
   # save outlier data
   outlier_file <- paste(out_prefix,'.outliers',sep='');

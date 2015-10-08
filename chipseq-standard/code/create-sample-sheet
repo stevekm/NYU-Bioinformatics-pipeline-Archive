@@ -11,6 +11,10 @@ if ($#argv != 0) then
   exit
 endif
 
+# set path
+set path = (./code/code $path)
+
+# check for duplicate sample names
 set dups = `(cd fastq-or-alignments; ls -1 *.fastq *.fastq.gz *.bam) | sed 's/\.gz$//' | sed 's/\.fastq$//' | sed 's/\.bam$//' | sort | uniq -d | wc -l` 
 if ($dups > 0) then
   scripts-send2err "Error: duplicate sample names, check your fastq and bam files!"
