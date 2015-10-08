@@ -1,4 +1,5 @@
 #!/usr/bin/Rscript
+#$ -S /usr/bin/Rscript
 
 ##
 ## USAGE: perform_pca.r MATRIX [COLUMN-NAMES]

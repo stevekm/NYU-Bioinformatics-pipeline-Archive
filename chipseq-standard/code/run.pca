@@ -1,4 +1,5 @@
 #!/bin/tcsh
+#$ -S /bin/tcsh
 
 ##
 ## USAGE: run.pca
@@ -24,13 +25,13 @@ foreach d ($D)
   if (! -e $out) then
     scripts-create-path $out/
     if (! -e $mat) then
-      cat $sheet | grep -viE '^#|input' | cut -f2,4 | awk '{print $2":"$1}' >! $lab                                         # TODO: exclude Input??
-      set files = `cat $sheet | grep -viE '^#|input' | cut -f2 | awk -v pref=$inpdir/$d/ '{print pref"matrix."$1".tsv"}'`   # TODO: exclude Input??
+      cat $sheet | grep -v '^#' | awk 'tolower($2)!~/input/' | cut -f2,4 | awk '{print $2":"$1}' >! $lab                                         # TODO: exclude Input??
+      set files = `cat $sheet | grep -v '^#' | awk 'tolower($2)!~/input/' | cut -f2 | awk -v pref=$inpdir/$d/ '{print pref"matrix."$1".tsv"}'`   # TODO: exclude Input??
       scripts-multi-paste $files | grep -v '^chr[MYX]' >! $mat                                                              # TODO: exclude chrM/X/Y?
     else
       scripts-send2err "Warning: $mat already exists, skipping..."
     endif  
-    set jid = ($jid `scripts-qsub-run results/logs/job.pca 1 scripts-perform-pca.r -v -o $out -L $lab --show-text --use-short-names $mat`)
+    set jid = ($jid `scripts-qsub-run results/logs/job.pca 1 ../../code/scripts-perform-pca.r -v -o $out -L $lab --show-text --use-short-names $mat`)
   else 
     scripts-send2err "Warning: $out already exists, skipping..."
   endif

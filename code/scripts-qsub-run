@@ -1,4 +1,5 @@
 #!/bin/tcsh
+#$ -S /bin/tcsh
 
 ##
 ## USAGE: scripts-qsub-run JOB-PREFIX N-THREADS SCRIPT-PATH ARGS ...

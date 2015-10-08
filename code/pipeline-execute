@@ -1,15 +1,16 @@
 #!/bin/tcsh
 
 ##
-## USAGE: pipeline-execute PROJECT-NAME
+## USAGE: pipeline-execute PROJECT-NAME E-MAIL
 ##
 
-if ($#argv != 1) then
+if ($#argv != 2) then
   grep '^##' $0
   exit
 endif
 
 set project = $1
+set email = $2
 
-qsub -cwd -m e -M aristotelis.tsirigos@nyumc.org -N $project ./run
+qsub -cwd -m e -M $email -N $project ./run
 
