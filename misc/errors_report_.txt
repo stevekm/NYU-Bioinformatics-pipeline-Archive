@@ -1,0 +1,109 @@
+#############
+# in hpcf
+###########
+kellys04@hpcf:~/pipeline-master/report/report_output$ R -e "rmarkdown::render('test.Rmd')"
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-redhat-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> rmarkdown::render('test.Rmd')
+Error: pandoc version 1.12.3 or higher is required and was not found.
+Execution halted
+
+
+
+
+#############
+# in phoenix
+###########
+
+kellys04@phoenix1:~/pipeline-master/report/report_output$ R -e "rmarkdown::render('test.Rmd')"
+
+R version 3.0.2 (2013-09-25) -- "Frisbee Sailing"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-redhat-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> rmarkdown::render('test.Rmd')
+Error in loadNamespace(name) : there is no package called ‘rmarkdown’
+Calls: :: ... tryCatch -> tryCatchList -> tryCatchOne -> <Anonymous>
+Execution halted
+
+#############
+# on local machine (MBP)
+###########
+kellys04@gtcmbp05:~/pipeline-master/report/report_output$ R -e "rmarkdown::render('test.Rmd')"
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> rmarkdown::render('test.Rmd')
+
+
+processing file: test.Rmd
+  |.................................................................| 100%
+  ordinary text without R code
+
+
+output file: test.knit.md
+
+/usr/local/bin/pandoc +RTS -K512m -RTS test.utf8.md --to latex --from markdown+autolink_bare_uris+ascii_identifiers+tex_math_single_backslash-implicit_figures --output test.tex --template /Library/Frameworks/R.framework/Versions/3.2/Resources/library/rmarkdown/rmd/latex/default-1.14.tex --highlight-style tango --latex-engine /Library/TeX/texbin/pdflatex --variable 'geometry:margin=1in'
+/usr/local/bin/pandoc +RTS -K512m -RTS test.utf8.md --to latex --from markdown+autolink_bare_uris+ascii_identifiers+tex_math_single_backslash-implicit_figures --output test.pdf --template /Library/Frameworks/R.framework/Versions/3.2/Resources/library/rmarkdown/rmd/latex/default-1.14.tex --highlight-style tango --latex-engine /Library/TeX/texbin/pdflatex --variable 'geometry:margin=1in'
+
+Output created: test.pdf
+>
+>
+
+
+########
+######
+####
+
+rmarkdown not installed at all on phoenix
+
+out of date pandoc version appears to be installed on hpcf
+
+local works...
