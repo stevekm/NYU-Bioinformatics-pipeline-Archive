@@ -13,8 +13,17 @@ endif
 # set path
 set path = (./code/code $path)
 
-set sheet = inputs/sample-sheet.tsv  # TODO: the code below will not work for multi-group assignments
+# process sample sheet
+set sheet = inputs/sample-sheet.tsv                                                                         # TODO: the code below will not work for multi-group assignments
+set groups_noinput = `cat $sheet | grep -v '^#' | cut -f4 | tr '|' '\n' | sort | uniq | grep -vwi input`
+if ($#groups_noinput <= 1) then
+  set awk_filter = '$0'                        # include inputs only if no more than one group (besides inputs) is available
+else
+  set awk_filter = 'tolower($2)!~/input/'      # remove all inputs from PCA
+  scripts-send2err "Warning: Excluding all Inputs from PCA."
+endif
 
+# run PCA
 scripts-send2err "=== Running PCA ============="
 scripts-create-path results/logs/
 set inpdir = matrices/results
@@ -28,8 +37,8 @@ foreach d ($D)
   if (! -e $out) then
     scripts-create-path $out/
     if (! -e $mat) then
-      cat $sheet | grep -v '^#' | awk 'tolower($2)!~/input/' | cut -f2,4 | awk '{print $2":"$1}' >! $lab                                         # TODO: exclude Input??
-      set files = `cat $sheet | grep -v '^#' | awk 'tolower($2)!~/input/' | cut -f2 | awk -v pref=$inpdir/$d/ '{print pref"matrix."$1".tsv"}'`   # TODO: exclude Input??
+      cat $sheet | grep -v '^#' | awk $awk_filter | cut -f2,4 | awk '{print $2":"$1}' >! $lab
+      set files = `cat $sheet | grep -v '^#' | awk $awk_filter | cut -f2 | awk -v pref=$inpdir/$d/ '{print pref"matrix."$1".tsv"}'`
       scripts-multi-paste $files | grep -v '^chr[MYX]' >! $mat                                                              # TODO: exclude chrM/X/Y?
     else
       scripts-send2err "Warning: $mat already exists, skipping..."

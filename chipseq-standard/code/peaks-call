@@ -38,8 +38,10 @@ scripts-send2err "- genome = $genome"
 macs2 callpeak -t $treatment_aln $control_aln --outdir=$out --name=macs $macs_params -g $gsize
 
 # create standardized output files
-cat $out/macs_peaks.broadPeak | cut -f-3,7 >! $out/peak-scores.bed
-(echo "PEAK-ID\tCHROMOSOME\tSTART\tEND\tFOLD-CHANGE\tPVALUE(-10log10)\tQVALUE(-10log10)"; cat $out/macs_peaks.broadPeak | sort -k7,7rg | cut -f-3,7- | rows -number -pref PEAK_) >! $out/peaks.table.tsv
+set ext = narrowPeak
+if (`echo $macs_params | grep -cw '\--broad'` == 1) set ext = broadPeak
+cat $out/macs_peaks.$ext | cut -f-3,7 >! $out/peak-scores.bed
+(echo "PEAK-ID\tCHROMOSOME\tSTART\tEND\tFOLD-CHANGE\tPVALUE(-10log10)\tQVALUE(-10log10)"; cat $out/macs_peaks.$ext | sort -k7,7rg | cut -f-3,7- | rows -number -pref PEAK_) >! $out/peaks.table.tsv
 cat $out/peaks.table.tsv | scripts-skipn 1 | cols -t 1 2 3 0 4 | sort -u | sort -k1,1 -k2,2g >! $out/peaks.bed
 
 # annotate peaks
