@@ -1,7 +1,7 @@
 #!/bin/tcsh
 
 ##
-## USAGE: pipeline-checkout SOURCE-DIR TARGET-DIR
+## USAGE: pipeline-checkout PIPELINE-DIR NEW-PROJECT-DIR
 ##
 
 if ($#argv != 2) then
@@ -9,9 +9,15 @@ if ($#argv != 2) then
   exit
 endif
 
-set src = $1
-set trg = $2
+set pipeline_dir = `echo $1 | sed 's/[/]\+$//'`    # remove trailing '/'
+set project_dir = $2
 
-rsync -auv --exclude=results $src/ $trg
+echo "Copying general code into $project_dir/code..."
+rsync -auv --exclude=results $pipeline_dir/../code $project_dir
+
+echo "Copying pipeline structure and code into $project_dir..."
+rsync -auv --exclude=results $pipeline_dir $project_dir
+
+
 
 
