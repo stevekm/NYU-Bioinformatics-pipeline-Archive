@@ -39,3 +39,4 @@ git pull
 # need more git/GitHub help? 
 # https://help.github.com/
 # https://help.github.com/categories/setup/
+# https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration
