@@ -27,13 +27,13 @@ endif
 scripts-send2err "=== Running PCA ============="
 scripts-create-path results/logs/
 set inpdir = matrices/results
-set D = `cd $inpdir; ls -1d matrices.* | grep -E 'nbins=1\.|nbins=1$'`
+set D = `cd $inpdir; find . -name 'matrix.*.tsv' | sed 's/\/matrix.*.tsv$//' | sort -u | grep 'nbins=1/' | sed 's/^\.\///'`
 set jid = ()
 foreach d ($D)
-  set out = results/`echo $d | sed 's/^matrices\./pca./'`
+  set out = results/`echo $d | sed "s/matrices\./pca./"`
+  scripts-send2err "- out = $out"
   set mat = $out/matrix.tsv
   set lab = $out/labels.txt
-  scripts-send2err "- out = $out"
   if (! -e $out) then
     scripts-create-path $out/
     if (! -e $mat) then

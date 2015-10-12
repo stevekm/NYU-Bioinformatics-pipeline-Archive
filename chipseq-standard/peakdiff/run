@@ -9,5 +9,5 @@ if ($#argv != 0) then
   exit
 endif
 
-./code/run.easydiff
+./code/run.peakdiff
 

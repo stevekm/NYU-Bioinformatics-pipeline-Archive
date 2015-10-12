@@ -6,6 +6,6 @@ matrices
 
 pca
 
-easydiff
+peakdiff
 
 #heatmaps
