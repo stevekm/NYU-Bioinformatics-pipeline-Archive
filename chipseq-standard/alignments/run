@@ -1,13 +1,1 @@
-#!/bin/tcsh
-
-##
-## USAGE: run
-##
-
-if ($#argv != 0) then
-  grep '^##' $0
-  exit
-endif
-
-./code/run.alignments
-
+code/run.alignments
