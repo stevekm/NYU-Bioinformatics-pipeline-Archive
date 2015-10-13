@@ -48,8 +48,14 @@ plotPCA <- function(mat,show_text,use_short_names)
 
 cmdline_args <- commandArgs(trailingOnly=T);
 
+# install packages
+for (p in c("optparse")) 
+  if (!suppressPackageStartupMessages(require(p,character.only=TRUE,quietly=TRUE,warn.conflicts=FALSE))) {
+    install.packages(p,repos="http://cran.rstudio.com/") 
+    library(p,character.only=TRUE,quietly=TRUE,verbose=FALSE)
+  }
+
 # process command-line arguments
-suppressPackageStartupMessages(library("optparse"));
 option_list <- list(
   make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
   make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"]."),
