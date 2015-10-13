@@ -33,14 +33,16 @@ foreach params (params/params.*)
     
     # create ref.bed
     set ref = $out/ref.bed
-    scripts-create-path $ref
-    if ($win > 0) then
-      set p = `scripts-create-temp`
-      cat $regions | genomic_regions bed >! $p
-      cat inputs/release/genome.bed | genomic_regions win -s $win -d `echo $win/4 | bc` | awk '{print $1"\t"$2"\t"$3"\t"$1":"$2"-"$3}' | genomic_overlaps subset -i $p >! $ref
-      rm -f $p
-    else
-      cat $regions | genomic_regions bed | scripts-sortbed | genomic_regions link | genomic_regions center | genomic_regions pos -op 1 | genomic_regions shiftp -5p -$flank -3p +$flank | genomic_regions shiftp -5p 0 -3p -1 | awk '{print $1"\t"$2"\t"$3"\t"$1":"$2"-"$3}' >! $ref
+    if (! -e $ref) then
+      scripts-create-path $ref
+      if ($win > 0) then
+        set p = `scripts-create-temp`
+        cat $regions | genomic_regions bed >! $p
+        cat inputs/release/genome.bed | genomic_regions win -s $win -d `echo $win/4 | bc` | awk '{print $1"\t"$2"\t"$3"\t"$1":"$2"-"$3}' | genomic_overlaps subset -i $p >! $ref
+        rm -f $p
+      else
+        cat $regions | genomic_regions bed | scripts-sortbed | genomic_regions link | genomic_regions center | genomic_regions pos -op 1 | genomic_regions shiftp -5p -$flank -3p +$flank | genomic_regions shiftp -5p 0 -3p -1 | awk '{print $1"\t"$2"\t"$3"\t"$1":"$2"-"$3}' >! $ref
+      endif
     endif
   
     # create matrices

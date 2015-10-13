@@ -10,12 +10,18 @@ if ($#argv != 0) then
   exit
 endif
 
-echo -n "PIPELINE STARTING: "; date
+# set path
+set path = (./code/code $path)
 
+scripts-send2err "PIPELINE STARTING: `date`"
 foreach d (__*)
   ( cd $d; ./run )
 end
+scripts-send2err "PIPELINE COMPLETED: `date`"
 
-echo -n "PIPELINE COMPLETED: "; date
-
+scripts-send2err ""
+scripts-send2err "Errors below, if any: "
+./code/code/pipeline-errors
+scripts-send2err ""
+scripts-send2err "Done."
 
