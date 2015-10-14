@@ -15,6 +15,10 @@ set path = (./code/code $path)
 # setup
 set sheet = inputs/sample-sheet.tsv
 set comparisons = inputs/comparisons.tsv
+if (! -e $comparisons) then
+  scripts-send2err "Warning: comparison file \'$comparisons\' not found."
+  exit
+endif
 
 # run easydiff
 scripts-send2err "=== Running peakdiff ============="

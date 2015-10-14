@@ -2,8 +2,8 @@
 ## REQUIRED INPUT FILES/DIRECTORIES
 #####################################
 
-* comparisons.tsv
-* sample-sheet.tsv
-* fastq-or-alignments/
-* release/ symbolic link
+* release/ : symbolic link to ENSEMBL release directory, e.g. ln -s Genomes/hg19/ENSEMBL_69 release
+* fastq-or-alignments/ : put all fastq[.gz] and/or bam files here (symbolic links are accepted as well)
+* sample-sheet.tsv : tab-separated file with 4 fields (#FILE-NAME <TAB> SAMPLE-NAME <TAB> CONTROL-SAMPLE-NAME <TAB> GROUPS)
+* comparisons.tsv : comparisons between pairs of samples for peakdiff
 
