@@ -18,6 +18,7 @@ This is the first page of the document. Other pages will be added to this one ba
 The current time is: \currenttime
 
 ```{r}
-
+system('uname -srv',intern=T)
+sessionInfo()
 
 ```
