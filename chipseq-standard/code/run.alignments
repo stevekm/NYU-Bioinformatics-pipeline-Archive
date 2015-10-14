@@ -12,24 +12,38 @@ endif
 # set path
 set path = (./code/code $path)
 
+# create results directory
 scripts-create-path results/
 
+# align
 scripts-send2err "=== Aligning reads ============="
+set sheet = inputs/sample-sheet.tsv
+if (`cat $sheet | grep -v '^#' | grep ' ' | wc -l` > 0) then
+  scripts-send2err 'Error: spaces are not allowed in sample sheet.'
+  exit
+endif
 set params = params/params.bowtie2.tcsh
 set threads = 8
 set jid = ()
-set Q = (inputs/fastq-or-alignments/*.fastq inputs/fastq-or-alignments/*.fastq.gz inputs/fastq-or-alignments/*.bam)
-foreach q ($Q)
-  set qname = `echo $q | sed 's/.*\///' | sed 's/\.gz$//' | sed 's/\.[^.]\+$//'`
+set Q = `cat $sheet | grep -v '^#' | cut -f1`           # file names (fastq or bam)
+set S = `cat $sheet | grep -v '^#' | cut -f2`           # sample names
+if (`echo $S | tr ' ' '\n' | sort | uniq -d | wc -l` > 0) then
+  scripts-send2err 'Error: duplicate sample names are not allowed.'
+  exit
+endif
+set k = 1
+while ($k <= $#Q)
+  set q = `echo $Q[$k] | tr ',' '\n' | sed 's/^/inputs\/fastq-or-alignments\//' | tr '\n' ',' | sed 's/,$//'`   # this allows comma-separated fastq files
+  set qname = $S[$k]
   set outdir = results/align.$qname
   if (! -e $outdir) then
-    rm -f $qname.bam
     scripts-send2err "Generating alignments for sample $qname..."
     scripts-create-path $outdir/ 
     set jid = ($jid `scripts-qsub-run $outdir/job.align $threads ./code/chipseq-align $outdir $params $q`)
   else 
-    scripts-send2err "Warning: $outdir or $outdir.bam already exists, skipping..."
+    scripts-send2err "Warning: $outdir already exists, skipping..."
   endif
+  @ k ++
 end
 
 scripts-send2err "Waiting for all jobs to finish..."
