@@ -1,0 +1,9 @@
+#!/bin/sh
+
+find . -name 'job.*.err' -print0 | xargs -0 grep -iE 'error|segmentation|not found|no such file' 1>&2
+
+
+
+
+
+

@@ -45,7 +45,7 @@ if ($R1 != '') then
   else
     set input = "-1 $R1 -2 $R2"
   endif
-  $aligner --threads $threads $align_params $input | samtools view -q $mapq -@ $threads -Sb1 - | samtools sort -m 4G -@ $threads - $out_dir/alignments_sorted
+  $aligner --threads $threads $align_params $input | samtools view -q $mapq -@ $threads -Sb1 - | samtools sort -m 10G -@ $threads - $out_dir/alignments_sorted
 else
   scripts-send2err "Sorting alignments..."
   samtools sort -m 4G -@ $threads $BAM $out_dir/alignments_sorted
