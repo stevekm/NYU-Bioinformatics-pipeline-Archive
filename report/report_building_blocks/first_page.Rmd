@@ -1,20 +1,15 @@
 ---
 title: "ChIP-Seq Report"
-author: "SK"
+author: "Stephen K"
 date: \today
 header-includes:
    - \usepackage{bbm}
    - \usepackage{datetime}
-   - \usepackage{siunitx}
-   - \usepackage{pythontex}
 output:
   pdf_document:
     keep_tex: yes
     number_sections: yes
-  html_document: default
 ---
 \section{Introduction}
 
 This is the first page of the document. Other pages will be added to this one based on pipeline output.
-
-

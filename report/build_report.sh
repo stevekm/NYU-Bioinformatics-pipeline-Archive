@@ -7,10 +7,10 @@ FINAL_REPORT="./report_output/final_report.Rmd"
 if [ -f $FINAL_REPORT ];
 then
 	# if it already exists, delete it, and copy over the new report first page
-	rm $FINAL_REPORT && cp ~/pipelines/reporting/report_building_blocks/first_page.Rmd $FINAL_REPORT
+	rm $FINAL_REPORT && cp ./report_building_blocks/first_page.Rmd $FINAL_REPORT
 else
 	# if the report does not already exist, copy over the first page of the report
-	cp ~/pipelines/reporting/report_building_blocks/first_page.Rmd $FINAL_REPORT
+	cp ./report_building_blocks/first_page.Rmd $FINAL_REPORT
 fi
 
 # look for alignment results
@@ -32,3 +32,8 @@ if [ -d ./demo_dirs/chipseq_standard/call_peaks ]
 then
 	cat ./report_building_blocks/chunk_peak_calling.Rmd >> $FINAL_REPORT
 fi
+
+cat ./report_building_blocks/last_page.Rmd >> $FINAL_REPORT
+
+# at the end, compile the report
+./R_render_report.R $FINAL_REPORT
