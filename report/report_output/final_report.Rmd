@@ -5,6 +5,7 @@ date: "\today"
 output:
   pdf_document:
     keep_tex: yes
+    latex_engine: xelatex
     number_sections: yes
   html_document: default
 header-includes:
