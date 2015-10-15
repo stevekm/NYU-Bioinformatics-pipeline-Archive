@@ -1,0 +1,9 @@
+\section{End}
+
+The current time is: \currenttime
+
+```{r}
+system('uname -srv',intern=T)
+sessionInfo()
+
+```

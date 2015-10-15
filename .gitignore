@@ -1,3 +1,5 @@
 *.fastq
 .DS_Store
 
+*.pdf
+
