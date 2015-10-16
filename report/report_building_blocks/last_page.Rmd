@@ -1,3 +1,5 @@
+
+\newpage
 \section{End}
 
 The current time is: \currenttime
@@ -6,4 +8,18 @@ The current time is: \currenttime
 system('uname -srv',intern=T)
 sessionInfo()
 
+```
+
+
+```{r,engine='bash'}
+
+#  
+echo "compiled by... $LOGNAME"
+
+
+echo $PWD
+
+echo $SHELL
+echo $HOME
+echo $HOSTNAME
 ```

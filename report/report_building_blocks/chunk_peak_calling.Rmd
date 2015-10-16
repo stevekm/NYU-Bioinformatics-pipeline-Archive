@@ -1,6 +1,33 @@
+
+\newpage
 \section{Call Peaks Analysis}
 
 This section will be added to the document if peak calling  analysis was performed. 
 
+\subsection{Peak Calling Sample Sheet}
 
+```{r,Peak_Sample_Sheet_import}
+# sample sheet location...
+# ./chipseq-standard/__02a-peaks/inputs/sample-sheet.tsv
+
+# hard code in the sample sheet location
+Peaks_Sample_Sheet<-read.delim(file = "/ifs/home/kellys04/projects/testbed_Schober-Ana-ChIPseq-2015-10-09/chipseq-standard/__02a-peaks/inputs/sample-sheet.tsv", sep = "\t", header = T, fill = T)
+
+# need to get a relative file path location to work! 
+# pull in the bash script location ran from ! ! 
+# Peaks_Sample_Sheet<-read.delim(file = "./chipseq-standard/__02a-peaks/inputs/sample-sheet.tsv", sep = "\t", header = T, fill = T)
+
+Peaks_Sample_Sheet
+```
+
+```{r,Peaks_Sample_Sheet_xtable,results='asis'}
+print(xtable(Peaks_Sample_Sheet))
+
+```
+
+\subsection{Input Files}
+
+```{r,List_Input_Files2}
+dir(path = "/ifs/home/kellys04/projects/testbed_Schober-Ana-ChIPseq-2015-10-09/chipseq-standard/__02a-peaks/inputs")
+```
 
