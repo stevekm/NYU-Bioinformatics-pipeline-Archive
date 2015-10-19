@@ -1,0 +1,43 @@
+#!/bin/tcsh
+#$ -S /bin/tcsh
+
+##
+## USAGE: scripts-qsub-wrapper N-THREADS SCRIPT-PATH OUTPUT-DIR ARGS ...
+##
+
+if ($#argv < 3) then
+  grep '^##' $0
+  exit
+endif
+
+set nthreads = $1
+set prog = `which $2`
+set outdir = $3
+shift
+shift
+
+if (! -e $outdir) then
+  set uptodate = false
+else
+#  find $outdir -type f -printf '%T+ %p\n' | sort | head -n 1
+  set uptodate = true
+endif
+
+if ($uptodate == false) then
+  scripts-send2err "[scripts-qsub-wrapper] Generating results in directory \'$outdir\'..."
+  if (-e $outdir) rm -rf $outdir
+  scripts-create-path $outdir/ 
+  set pref = $outdir/job
+  scripts-print-cmdline $prog $argv:q >! $pref.sh
+  qsub -cwd -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id          # TODO: qsub does not allow ',' in $pref
+  cat $pref.id | cut -d' ' -f3                                                                 # TODO: need a general method to obtain job id
+else 
+  scripts-send2err "[scripts-qsub-wrapper] Directory \'$outdir\' is up-to-date, skipping..."
+endif
+
+
+
+
+
+
+
