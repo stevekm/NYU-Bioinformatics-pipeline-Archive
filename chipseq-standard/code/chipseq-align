@@ -48,7 +48,7 @@ if ($R1 != '') then
   $aligner --threads $threads $align_params $input | samtools view -q $mapq -@ $threads -Sb1 - | samtools sort -m 10G -@ $threads - $out_dir/alignments_sorted
 else
   scripts-send2err "Sorting alignments..."
-  samtools sort -m 4G -@ $threads $BAM $out_dir/alignments_sorted
+  samtools sort -m 10G -@ $threads $BAM $out_dir/alignments_sorted
 endif
 
 
@@ -70,7 +70,8 @@ java -Xms8G -Xmx16G -jar $picard_root/MarkDuplicates.jar \
 # stats
 scripts-send2err "Computing statistics..."
 if ($R1 != '') then
-  set n_reads = `cat $R1 | gunzip | grep ^@ | wc -l`
+  set R1_files = `echo $R1 | tr ',' ' '`
+  set n_reads = `cat $R1_files | gunzip | grep ^@ | wc -l`
 else
   set n_reads = `samtools view $BAM | wc -l`
 endif
