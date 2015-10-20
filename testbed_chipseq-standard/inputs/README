@@ -1,9 +1,0 @@
-#####################################
-## REQUIRED INPUT FILES/DIRECTORIES
-#####################################
-
-* comparisons.tsv
-* sample-sheet.tsv
-* fastq-or-alignments/
-
-
