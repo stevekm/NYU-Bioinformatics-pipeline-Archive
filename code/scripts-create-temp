@@ -1,13 +1,19 @@
 #!/bin/tcsh -f
 
 ##
-## USAGE: scripts-create-temp
+## USAGE: scripts-create-temp [DIRECTORY]
 ##
 
-if ($#argv < 0) then
+if ($#argv > 1) then
   usage $0
   exit
 endif
 
-mktemp _tmp.XXXXXXXX
+set outdir = $1
+
+if ($outdir == '') then
+  mktemp _tmp.XXXXXXXX
+else
+  echo $outdir/`cd $outdir; mktemp _tmp.XXXXXXXX`
+endif
 

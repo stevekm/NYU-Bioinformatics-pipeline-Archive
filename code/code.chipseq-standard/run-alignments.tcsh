@@ -40,7 +40,7 @@ while ($k <= $#Q)
   set q = `echo $Q[$k] | tr ',' '\n' | sed 's/^/inputs\/fastq-or-alignments\//' | tr '\n' ',' | sed 's/,$//'`   # this allows comma-separated fastq files
   set qname = $S[$k]
   set outdir = results/align.$qname
-  set jid = ($jid `scripts-qsub-wrapper $threads $outdir ./code/chipseq-align $outdir $params $q`)
+  set jid = ($jid `scripts-qsub-wrapper $threads ./code/chipseq-align $outdir $params $q`)
   @ k ++
 end
 

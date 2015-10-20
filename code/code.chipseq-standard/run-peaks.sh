@@ -40,7 +40,7 @@ done
 
 # done
 scripts-send2err "Waiting for all jobs to finish..."
-scripts-qsub-wait "$jid"
+scripts-qsub-wait "${jid[*]}"
 scripts-send2err "Done."
 
 

@@ -12,27 +12,27 @@ endif
 
 set nthreads = $1
 set prog = `which $2`
-set outdir = $3
+set out = $3
 shift
 shift
 
-if (! -e $outdir) then
+if (! -e $out) then
   set uptodate = false
 else
-#  find $outdir -type f -printf '%T+ %p\n' | sort | head -n 1
+#  find $out -type f -printf '%T+ %p\n' | sort | head -n 1               # need to compare date OUTPUT-DIR was created to the most recent date in SCRIPT-PATH and ARGS
   set uptodate = true
 endif
 
 if ($uptodate == false) then
-  scripts-send2err "[scripts-qsub-wrapper] Generating results in directory \'$outdir\'..."
-  if (-e $outdir) rm -rf $outdir
-  scripts-create-path $outdir/ 
-  set pref = $outdir/job
+  scripts-send2err "[scripts-qsub-wrapper] Generating results in directory \'$out\'..."
+  if (-e $out) rm -rf $out
+  scripts-create-path $out/ 
+  set pref = $out/job
   scripts-print-cmdline $prog $argv:q >! $pref.sh
   qsub -cwd -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id          # TODO: qsub does not allow ',' in $pref
   cat $pref.id | cut -d' ' -f3                                                                 # TODO: need a general method to obtain job id
 else 
-  scripts-send2err "[scripts-qsub-wrapper] Directory \'$outdir\' is up-to-date, skipping..."
+  scripts-send2err "[scripts-qsub-wrapper] Directory \'$out\' is up-to-date, skipping..."
 endif
 
 
