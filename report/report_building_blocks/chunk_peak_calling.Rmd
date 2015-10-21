@@ -1,6 +1,0 @@
-\section{Call Peaks Analysis}
-
-This section will be added to the document if peak calling  analysis was performed. 
-
-
-

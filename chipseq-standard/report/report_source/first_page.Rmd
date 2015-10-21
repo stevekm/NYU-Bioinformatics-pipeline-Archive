@@ -1,0 +1,62 @@
+---
+title: "ChIP-Seq Report"
+author: "Stephen K"
+date: \today
+header-includes:
+   - \usepackage{bbm}
+   - \usepackage{datetime}
+output:
+  pdf_document:
+    keep_tex: yes
+    number_sections: yes
+---
+```{r,SETUP}
+# required packages
+require(xtable)
+options(xtable.comment = FALSE) # make sure to include this if using .Rmd
+
+# set the R working directory
+# setwd()
+```
+\section{Introduction}
+
+This is the first page of the document. Other pages will be added to this one based on pipeline output.
+
+Here is the analysis directory:
+```{r,List_Input_Files1}
+dir(path = "/ifs/home/kellys04/projects/testbed_Schober-Ana-ChIPseq-2015-10-09/chipseq-standard/")
+```
+
+
+Lets grab the name of the project from the filename of the error log
+
+```{r,ProjName_Grabbing}
+Dir_Contents<-dir(path = "/ifs/home/kellys04/projects/testbed_Schober-Ana-ChIPseq-2015-10-09/chipseq-standard/")
+Dir_Contents[grep(pattern = ".e",x = Dir_Contents,value = F,fixed = T)]
+#PROJ_NAME<-dir(path = "/ifs/home/kellys04/projects/testbed_Schober-Ana-ChIPseq-2015-10-09/chipseq-standard/")
+
+
+```
+
+
+\section{Test}
+
+This is the section where I will test things. 
+
+```{r,MY_TEST}
+# r chunk goes here
+tmp<-1 # this is my value
+print(tmp)
+
+x<-"KITTENS"
+```
+
+This is the value I entered `r tmp`
+
+Q: What is fuzzy and cute? A: `r x`
+
+
+```{r,engine='bash'}
+pwd
+ls -l
+```
