@@ -1,7 +1,7 @@
 #!/bin/tcsh
 
 ##
-## USAGE: peaks-diff OUTPUT-DIR PARAMETER-SCRIPT MATRIX-TSV NREF
+## USAGE: peaks-diff OUTPUT-DIR PARAMETER-SCRIPT X-FILES Y-FILES
 ##
 
 if ($#argv != 4) then
@@ -14,8 +14,13 @@ set path = (./code/code $path)
 
 set out = $1
 set param_script = $2
-set mat = $3
-set nref = $4
+set xfiles = ($3)
+set yfiles = ($4)
+
+# create matrix
+set mat = $out/matrix.tsv
+scripts-multi-paste $xfiles $yfiles >! $mat
+set nref = $#xfiles
 
 # set parameters
 source $param_script

@@ -19,7 +19,7 @@ shift
 
 set script = `mktemp $jpref.XXXXXXXX`
 scripts-print-cmdline $prog $argv:q >> $script
-qsub -cwd -o $script.out -e $script.err -pe threaded $nthreads ./$script >! $script.jid
+qsub -cwd -o :$script.out -e :$script.err -pe threaded $nthreads ./$script >! $script.jid
 cat $script.jid | cut -d' ' -f3
 
 #qsub -cwd -pe threaded $nthreads -o $log.out -e $log.err $prog $argv:q | cut -d' ' -f3
