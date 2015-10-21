@@ -36,15 +36,19 @@ foreach params (params/params.*.tcsh)
     set x = $X[$m]
     set y = $Y[$m]
     set comparison = ${x}.${y}
-    scripts-send2err "-- [$params] comparing $x to $y..."
-    foreach d ($D)
-      set xfiles = `cat $sheet | grep -v '^#' | cut -f2,4 | tr '|' ' ' | key_expand | cols -t 1 0 | grep "^$x	" | cut -f2 | awk -v d=$inpdir/$d '{print d"/matrix."$0"/matrix.tsv"}'`
-      set yfiles = `cat $sheet | grep -v '^#' | cut -f2,4 | tr '|' ' ' | key_expand | cols -t 1 0 | grep "^$y	" | cut -f2 | awk -v d=$inpdir/$d '{print d"/matrix."$0"/matrix.tsv"}'`
-      set outdir1 = results/easydiff.$params_name/$d
-      scripts-create-path $outdir1/logs/
-      set outdir2 = $outdir1/easydiff.$comparison
-      set jid = ($jid `scripts-qsub-wrapper $threads ./code/peaks-diff $outdir2 $params "$xfiles" "$yfiles"`)
-    end
+    if ( (`cat $sheet | grep -v '^#' | cut -f4 | tr '|' '\n' | grep -c "^$x"'$'` == 0) || (`cat $sheet | grep -v '^#' | cut -f4 | tr '|' '\n' | grep -c "^$y"'$'` == 0) ) then
+      scripts-send2err "Warning: sample $x or $y not found, skipping..."
+    else
+      scripts-send2err "-- [$params] comparing $x to $y..."
+      foreach d ($D)
+        set xfiles = `cat $sheet | grep -v '^#' | cut -f2,4 | tr '|' ' ' | key_expand | cols -t 1 0 | grep "^$x	" | cut -f2 | awk -v d=$inpdir/$d '{print d"/matrix."$0"/matrix.tsv"}'`
+        set yfiles = `cat $sheet | grep -v '^#' | cut -f2,4 | tr '|' ' ' | key_expand | cols -t 1 0 | grep "^$y	" | cut -f2 | awk -v d=$inpdir/$d '{print d"/matrix."$0"/matrix.tsv"}'`
+        set outdir1 = results/easydiff.$params_name/$d
+        scripts-create-path $outdir1/logs/
+        set outdir2 = $outdir1/easydiff.$comparison
+        set jid = ($jid `scripts-qsub-wrapper $threads ./code/peaks-diff $outdir2 $params "$xfiles" "$yfiles"`)
+      end
+    endif
     @ m ++
   end
 end
