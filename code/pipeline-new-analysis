@@ -24,13 +24,13 @@ set pipeline_dir = `echo $pipeline_dir | sed 's/[/]\+$//'`    # remove trailing 
 rsync -auv --exclude=results $pipeline_dir/ $analysis_dir
 
 # create a copy OR symbolic link to the code
-set code_dir = $repo_code_dir/code.$pipeline_name
 cd $analysis_dir
 rm -f code
 if ($symlink == 'true') then
-  ln -s $code_dir code
+  ln -s $repo_code_dir/code.$pipeline_name code
 else
-  rsync -auv $repo_code_dir .
+  rsync -auv $repo_code_dir/ code.main
+  ln -s code.main/code.$pipeline_name code
 endif
 
 
