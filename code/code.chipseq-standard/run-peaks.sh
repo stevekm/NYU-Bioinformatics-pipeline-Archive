@@ -27,13 +27,18 @@ for params in $(ls -1 params/params.*); do
   # call peaks for each alignment directory
   for aln in $(ls -1d alignments/results/align.*); do
     sample=$(echo $aln | sed 's/.*\/align\.//')                                        # "treatment" sample name
+    outdir=$out/peaks.$sample
+    if [ $(cat $sheet | cut -f2 | grep -v '^#' | grep -c "^$sample$") == 0 ]; then
+      scripts-send2err "Warning: sample $sample is not in the sample sheet, removing..."
+      rm -rf $outdir
+      continue
+    fi
     bam_sample=$aln/alignments.bam
     control=$(cat $sheet | grep -v '^#' | cut -f2,3 | grep "^$sample	" | cut -f2)     # control (Input/IgG) sample name
     bam_control= 
     if [ "$control" != 'n/a' ]; then
       bam_control=alignments/results/align.$control/alignments.bam
     fi
-    outdir=$out/peaks.$sample
     jid+=( $(scripts-qsub-wrapper $threads ./code/peaks-call $outdir $params $bam_sample $bam_control) )
   done
 done

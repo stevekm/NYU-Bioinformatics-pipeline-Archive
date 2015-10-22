@@ -14,30 +14,23 @@ fi
 PATH=./code/code:$PATH
 
 # parameters
-params=params/params.bowtie2.tcsh
+params=params/params.bowtie2.tcsh         # parameter script needs to be written in same language as the wrapper script!
 
 # create results directory
 scripts-create-path results/
 
 # read from sample sheet(s)
 sheet=inputs/sample-sheet.tsv
-if [ $(cat $sheet | grep -v '^#' | grep ' ' | wc -l) -gt 0 ]; then
-  scripts-send2err 'Error: spaces are not allowed in sample sheet.'
-  exit
-fi
+./code/validate-sample-sheet.tcsh $sheet
 Q=( $(cat $sheet | grep -v '^#' | cut -f1) )           # file names (fastq or bam)
 S=( $(cat $sheet | grep -v '^#' | cut -f2) )           # sample names
-if [ $(echo $S | tr ' ' '\n' | sort | uniq -d | wc -l) -gt 0 ]; then
-  scripts-send2err 'Error: duplicate sample names are not allowed.'
-  exit
-fi
 
 # align
 scripts-send2err "=== Aligning reads ============="
 threads=8
 jid=()
 k=0
-while [ $k -lt ${#Q[@]} ]; do
+while (( $k < ${#Q[@]} )); do
   q=$(echo ${Q[$k]} | tr ',' '\n' | sed 's/^/inputs\/fastq-or-alignments\//' | tr '\n' ',' | sed 's/,$//')      # this allows comma-separated fastq files
   qname=${S[$k]}
   outdir=results/align.$qname

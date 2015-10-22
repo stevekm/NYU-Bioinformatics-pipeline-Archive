@@ -47,4 +47,6 @@ threads=${#alignments[@]}
 alignments=$(echo ${alignments[*]} | tr ' ' ',')
 gtools_threaded matrix -v -i -p $threads --overlap-op hits -nbins $nbins -rpkm $alignments $ref > $outdir/matrix.tsv
 
+# cleanup
+rm -f $ref
 

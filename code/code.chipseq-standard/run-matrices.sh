@@ -16,6 +16,7 @@ PATH=./code/code:$PATH
 scripts-send2err "=== Generating matrices ============="
 scripts-create-path results/
 threads=1
+sheet=inputs/sample-sheet.tsv
 jid=()
 # loop over all matrix parameter settings
 for params in $(ls -1 params/params.*.sh); do
@@ -30,6 +31,11 @@ for params in $(ls -1 params/params.*.sh); do
     # create matrices
     for aln in $(ls -1d alignments/results/align.*); do
       sample=$(echo $aln | sed 's/.*\/align\.//')
+      if [ $(cat $sheet | cut -f2 | grep -v '^#' | grep -c "^$sample$") == 0 ]; then
+        scripts-send2err "Warning: sample $sample is not in the sample sheet, removing..."
+        rm -rf $outdir
+        continue
+      fi
       jid+=( $(scripts-qsub-wrapper $threads ./code/create-matrix.sh $out/matrix.$sample $params $aln/alignments.bam "${ref_regions[*]}") )
     done
   done
