@@ -1,0 +1,105 @@
+
+#
+# configure the shell and set up the environment ...
+#
+
+umask 022
+
+
+
+setenv MANPATH /usr/local/man:/usr/man
+setenv _POSIX2_VERSION 199209
+setenv LC_COLLATE "C"
+setenv LC_ALL "C"
+set noclobber
+set autolist
+set autoexpand
+set nohup
+set nobeep
+unset autocorrect
+unset correct
+unalias bc
+
+set host_type = linux
+
+module load samtools/1.2.1
+
+set path = ( \
+	$path \
+	~/Bin/$host_type \
+	~/Code/scripts \
+)
+
+set cdpath = ( $home )
+
+setenv PYTHONPATH /ifs/home/at570/disk1/Resources/downloads/joblib-0.6.4:/ifs/home/at570/disk1/Resources/downloads/h5py-2.0.1/lib/python2.7/site-packages:/ifs/home/at570/disk1/Resources/downloads/mirnylib:/ifs/home/at570/disk1/Resources/downloads/hiclib/src
+setenv PERL5LIB /root/disk1/downloads/vcftools_0.1.11/lib/perl5/site_perl
+
+
+setenv MANPATH /usr/local/man:/usr/man
+#if (`env | grep -cw REMOTEHOST` != 0) then
+#  setenv DISPLAY ${REMOTEHOST}:0.0
+#endif
+
+setenv SVN_EDITOR /bin/vi
+
+set my_host = $HOSTNAME
+set prompt = "%{\033[35m%}%n@$my_host %{\033[31m%}%c4 [\!]%{\033[30m%} " 
+set prompt2="  " prompt3="%R ? "
+
+set history = 1000
+set ignoreeof
+
+
+
+#
+# SET UP ALIASES
+#
+
+
+# Aliases for date/time
+alias   date    'date "+%A %d %B %Y, %T"'
+alias   addpath "set path = ($path \!*)"
+
+
+# Aliases for ls
+alias   la      ls -AF
+alias   ll      ls -l 
+alias   lla     ls -aglF
+
+# Aliases for mv, cp, rm
+alias   mv      mv -i
+alias   cp      cp -i
+alias   rm      rm -i
+
+# Programs
+alias   c       clear
+
+# Shell commands
+alias   a       alias
+alias   ua      unalias
+alias   j       jobs -l
+alias   so      source
+
+# Miscelleaneous
+alias   q       'quota -v'
+alias	f	finger
+
+# misc
+alias	xterm	"xterm -fg black -bg white -sb"
+alias	noreglabel	'sed "s/^[^	]\+/_/"'
+alias	format4go2	'sort | joint - ~/Systems/ontology/data/GO.terms | sort +3 -4g'
+alias	format4go	"tr '|_' '\t ' | cols -d '	' 0 3 4 5 6 1 2"
+alias	fasta2reg	"rows -p 2 -m -t '	' | cols -d '	' 2 1"
+alias	reg2fasta	"cols -d '	' 1 0 | sed 's/^/>_/' | tr '\t' '\n' | sed 's/_/_	/'"
+alias	flatten	"tr ' ' '\n' | grep '.\+'"
+alias	joint	"join -t'	'"
+
+# ssh/sftp
+alias ssh-slinky "ssh -X tsirigos@slinky.cs.nyu.edu"
+alias ssh-phoenix "ssh -X at570@phoenix.med.nyu.edu"
+alias ssh-aifantis "ssh -X at570@10.193.37.34"
+alias ssh-nyuhpc "ssh -X at570@hpc.nyu.edu"
+alias ftp-slinky "sftp tsirigos@slinky.cs.nyu.edu"
+
+
