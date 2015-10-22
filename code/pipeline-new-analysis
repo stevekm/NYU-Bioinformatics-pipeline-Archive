@@ -1,16 +1,17 @@
 #!/bin/tcsh
 
 ##
-## USAGE: pipeline-new-analysis PIPELINE-NAME NEW-PROJECT-DIR
+## USAGE: pipeline-new-analysis PIPELINE-NAME NEW-PROJECT-DIR [SYMLINK-CODE=false]
 ##
 
-if ($#argv != 2) then
+if ($#argv < 2) then
   grep '^##' $0
   exit
 endif
 
 set pipeline_name = $1
 set project_dir = $2
+set symlink = $3
 
 set repo_code_dir = `readlink -f $0 | sed 's/\/[^/]\+$//'`
 
@@ -20,11 +21,15 @@ set pipeline_dir = $repo_code_dir/../pipelines/$pipeline_name
 set pipeline_dir = `echo $pipeline_dir | sed 's/[/]\+$//'`    # remove trailing '/'
 rsync -auv --exclude=results $pipeline_dir/ $project_dir
 
-# create a symbolic link to the code
+# create a copy OR symbolic link to the code
 set code_dir = $repo_code_dir/code.$pipeline_name
 cd $project_dir
 rm -f code
-ln -s $code_dir code
+if ($symlink == 'true') then
+  ln -s $code_dir code
+else
+  rsync -auv $repo_code_dir .
+endif
 
 
 
