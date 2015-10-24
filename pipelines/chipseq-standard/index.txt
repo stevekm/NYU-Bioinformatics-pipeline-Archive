@@ -1,6 +1,7 @@
 alignments
 
 peaks
+peaktable
 
 matrices
 
