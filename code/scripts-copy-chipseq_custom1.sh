@@ -1,6 +1,5 @@
 #!/bin/bash
 shopt -s extglob  #Enables extglob
-
 # this script copies the results of a chip-seq analysis over to a Results dir
 
 # call script like this:
@@ -8,11 +7,17 @@ shopt -s extglob  #Enables extglob
 # EXMPLE:
 # ~/pipeline-master/code/scripts-copy-chipseq_custom1.sh ~/projects/ColumbiaU-Jinsook-2015-10-22/ /ifs/data/sequence/results/external/columbia/2015-10-22/chip-seq/
 
+# you can check the arguments here:
+# echo $1
+# echo $2
 
-#
-##
+# things to copy:
+# bigwigs
+# peaks; narrow and broad
+# PCA
+# peaks table
+
 ### COPY THE BIG WIGS
-if [ -d ${1}*/peaks/results ]; then
 # make dir
 mkdir -p $2alignment/bigwigs
 
@@ -28,17 +33,11 @@ for i in $BIG_WIGS; do
   # copy the file with new name (don't overwrite if already present!)
   cp -an $i $2alignment/bigwigs/$z.bw
 done
-fi
-###
-##
-#
 
 
 
-#
-##
+
 ### COPY THE PEAKS
-if [ -d ${1}*/peaks/results ]; then
 # make the dirs
 mkdir -p $2peaks/{narrow,broad}
 
@@ -55,6 +54,7 @@ for i in $ALL_PEAKS_FILES; do
     else
       :
     fi
+    
   fi
   
   # get the base dir name
@@ -70,27 +70,20 @@ for i in $ALL_PEAKS_FILES; do
   cp -an $i $2/peaks/$PEAKS_nar_brd/$beautiful_file_name
 
 done
-fi
-###
-##
-#
 
 
-#
-##
-### copy the PCA
-if [ -d ${1}*/pca/results ]; then
-  rsync -a --exclude "logs" --exclude 'job*' --exclude '*win*' ${1}*/pca/results/ $2pca
-fi
+
+# copy the PCA
+rsync -a --exclude "logs" --exclude 'job*' --exclude '*win*' ${1}*/pca/results/ $2pca
+
 # copy the Peaks table
-if [ -d ${1}*/peaktable/results ]; then
-  rsync -a --exclude "job*" --exclude "ref*" ${1}*/peaktable/results/peaktable.standard/ $2peaktable
-fi
-###
-##
-#
 
-### PERMISSIONS
+
+if [ -f ${1}*/peaktable ]; then
+  rsync -a --exclude "job*" --exclude "ref*" ${1}*/peaktable/results/peaktable.standard/ $2peaktable
+else
+  :
+fi
 # allow group users to read and write
 chmod g+rw -R $2*
 chgrp -Rf results $2* # doesn't work yet..? Fail silently
