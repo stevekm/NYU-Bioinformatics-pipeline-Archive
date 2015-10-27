@@ -19,7 +19,7 @@ shift
 if (! -e $out) then
   set uptodate = false
 else
-#  find $out -type f -printf '%T+ %p\n' | sort | head -n 1               # need to compare date OUTPUT-DIR was created to the most recent date in SCRIPT-PATH and ARGS
+#  find $out -type f -printf '%T+ %p\n' | sort | head -n 1               # TODO: need to compare date OUTPUT-DIR was created to the most recent date in SCRIPT-PATH and ARGS
   set uptodate = true
 endif
 
@@ -29,10 +29,10 @@ if ($uptodate == false) then
   scripts-create-path $out/ 
   set pref = $out/job
   scripts-print-cmdline $prog $argv:q >! $pref.sh
-  qsub -cwd -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id          # TODO: qsub does not allow ',' in $pref
+  qsub -cwd -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id
   cat $pref.id | cut -d' ' -f3                                                                 # TODO: need a general method to obtain job id
 else 
-  scripts-send2err "[scripts-qsub-wrapper] Directory \'$out\' is up-to-date, skipping..."
+  scripts-send2err "[scripts-qsub-wrapper] Directory \'$out\' exists, skipping..."             # TODO: change this message to up-to-date when implemented
 endif
 
 
