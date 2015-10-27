@@ -1,0 +1,8 @@
+#####################################
+## REQUIRED INPUT FILES/DIRECTORIES
+#####################################
+
+* release/ : symbolic link to ENSEMBL release directory, e.g. ln -s Genomes/hg19/ENSEMBL_69 release
+* fastq/ : put all fastq[.gz] files here (symbolic links are accepted as well)
+* sample-sheet.tsv : tab-separated file with 4 fields ( #SAMPLE-NAME <TAB> FASTQ-R1-FILE(S) <TAB> FASTQ-R2-FILES(S) <TAB> GROUP(S) ) 
+

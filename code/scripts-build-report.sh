@@ -12,8 +12,10 @@
 
 
 # the location of the final report to output
-# FINAL_REPORT="./report/report_output/final_report.Rmd"
-touch ./chipseq-standard/report/report_output/final_report.Rmd
+REPORT_OUTDIR="./chipseq-analysis/report/report_output/"
+FINAL_REPORT="./chipseq-analysis/report/report_output/final_report.Rmd"
+touch $REPORT_OUTDIR
+touch $FINAL_REPORT
 
 # check to make sure the output report exists
 if [ -f $FINAL_REPORT ];

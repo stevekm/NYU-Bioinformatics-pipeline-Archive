@@ -1,0 +1,7 @@
+#SAMPLE-NAME	FASTQ-R1-FILES	FASTQ-R2-FILES	GROUPS
+GM-HindIII-rep1-HiC	GM-HindIII-rep1-HiC_R1.fastq.gz	GM-HindIII-rep1-HiC_R2.fastq.gz	GM-HindIII
+GM-HindIII-rep2-HiC	GM-HindIII-rep2-HiC_R1.fastq.gz	GM-HindIII-rep2-HiC_R2.fastq.gz	GM-HindIII
+GM-HindIII-rep3-HiC	GM-HindIII-rep3-HiC_R1.fastq.gz	GM-HindIII-rep3-HiC_R2.fastq.gz	GM-HindIII
+GM-HindIII-rep4-HiC	GM-HindIII-rep4-HiC_R1.fastq.gz	GM-HindIII-rep4-HiC_R2.fastq.gz	GM-HindIII
+GM-NcoI-rep5-HiC	GM-NcoI-rep5-HiC_R1.fastq.gz	GM-NcoI-rep5-HiC_R2.fastq.gz	GM-NcoI
+GM-NcoI-rep6-HiC	GM-NcoI-rep6-HiC_R1.fastq.gz	GM-NcoI-rep6-HiC_R2.fastq.gz	GM-NcoI
