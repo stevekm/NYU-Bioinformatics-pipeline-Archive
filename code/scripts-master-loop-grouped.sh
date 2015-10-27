@@ -31,7 +31,7 @@ for p in ${params[*]}; do
     # loop over all sample groups
     for grp in ${groups[*]}; do
       outdir=$outpref.$pname/$leaf2/$grp
-      leaves=( $(cat $sheet | awk -v grp=$grp '$4==grp' | cut -f1 | awk -v d=$inpdir/$leaf2 '{print d"/"$0}') )
+      leaves=( $(cat $sheet | awk -v grp=$grp '$4==grp' | cut -f1 | awk -v d=$inpdir/$leaf2 '{print d"/"$0}') )      # TODO: need to modify this for samples with multiple group assignments
       jid+=( $(scripts-qsub-wrapper $threads ./code/hicseq-matrix.tcsh $outdir $params "${leaves[*]}") )
     done
   done
