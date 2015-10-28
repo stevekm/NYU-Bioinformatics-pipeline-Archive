@@ -1,7 +1,7 @@
 #!/bin/bash
 shopt -s extglob  #Enables extglob
 
-# this script copies the results of a chip-seq analysis over to a Results dir
+# this script copies the results of a chip-seq analysis over to a Results dir for a client. 
 
 # call script like this:
 # scripts-copy-chipseq.sh {input/project dir full paths} {results dir full path}
