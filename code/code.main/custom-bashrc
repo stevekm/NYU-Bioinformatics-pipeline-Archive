@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+export LC_ALL=C
+export PATH=./code/code.main:/ifs/home/at570/disk1/Resources/Bin/linux:$PATH
+

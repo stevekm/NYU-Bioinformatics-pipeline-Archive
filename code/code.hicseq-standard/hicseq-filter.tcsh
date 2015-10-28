@@ -4,6 +4,10 @@
 ## USAGE: hic-filter.tcsh OUTPUT-DIR PARAM-SCRIPT ALIGNMENT-DIR
 ##
 
+# shell settings
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if ($#argv != 3) then
   grep '^##' $0
   exit
@@ -12,9 +16,6 @@ endif
 set out = $1
 set params = $2
 set aln = $3
-
-# set path
-set path = (./code/code $path)
 
 # run parameter script
 source $params

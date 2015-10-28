@@ -4,6 +4,10 @@
 ## USAGE: create-matrix.sh OUTPUT-DIR PARAMETER-SCRIPT ALIGNMENT-FILES REF-REGIONS
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-bashrc
+
+# process command-line inputs
 if (($# != 4)); then
   grep '^##' $0
   exit

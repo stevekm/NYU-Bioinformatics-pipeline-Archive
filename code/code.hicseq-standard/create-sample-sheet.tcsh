@@ -1,18 +1,19 @@
 #!/bin/tcsh
 
 ##
-## USAGE: create-sample-sheet
+## USAGE: create-sample-sheet.tcsh
 ##
 ## FUNCTION: create sample sheet automatically from input files in fastq-or-alignments directory
 ##
 
+# shell settings
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if ($#argv != 0) then
   grep '^##' $0
   exit
 endif
-
-# set path
-set path = (./code/code $path)
 
 # inputs/outputs
 set inpdir = fastq

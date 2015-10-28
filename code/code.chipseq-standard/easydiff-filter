@@ -4,13 +4,14 @@
 ## USAGE: easydiff-filter EASYDIFF-DIRECTORY PARAMETERS
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if ($#argv != 2) then
   grep '^##' $0
   exit
 endif
-
-# set path
-set path = (./code/code $path)
 
 set d = $1
 set params = "$2"

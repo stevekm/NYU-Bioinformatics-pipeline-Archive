@@ -6,13 +6,13 @@
 ## USAGE #2: chipseq-align OUTPUT-DIR PARAMETER-SCRIPT BAM-FILE
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
 if ($#argv < 3) then
   grep '^##' $0
   exit
 endif
-
-# set path
-set path = (./code/code $path)
 
 set out_dir = $1
 set params = $2

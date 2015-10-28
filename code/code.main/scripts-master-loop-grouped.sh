@@ -16,9 +16,6 @@ params=($4)
 inpdir=$5
 groups=($6)
 
-# set path
-PATH=./code/code:$PATH
-
 # start
 sheet=inputs/sample-sheet.tsv
 jid=()

@@ -4,15 +4,15 @@
 ## USAGE: validate-sample-sheet SAMPLE-SHEET-TSV
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
 if ($#argv != 1) then
   grep '^##' $0
   exit
 endif
 
 set sheet = $1
-
-# set path
-set path = (./code/code $path)
 
 if (`cat $sheet | grep -v '^#' | grep ' ' | wc -l` > 0) then
   scripts-send2err 'Error: spaces are not allowed in sample sheet.'

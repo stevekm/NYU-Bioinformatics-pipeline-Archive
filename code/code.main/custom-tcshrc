@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+setenv LC_ALL "C"
+set path = ( ./code/code.main /ifs/home/at570/disk1/Resources/Bin/linux $path )
+

@@ -4,14 +4,15 @@
 ## USAGE: run-alignments.sh
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-bashrc
+
+# process command-line inputs
 if [ $# != 0 ]
 then
   grep '^##' $0
   exit
 fi
-
-# set path
-PATH=./code/code:$PATH
 
 # parameters
 params=params/params.bowtie2.tcsh         # parameter script needs to be written in same language as the wrapper script!

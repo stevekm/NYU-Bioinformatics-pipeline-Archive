@@ -4,13 +4,13 @@
 ## USAGE: run-peakdiff.tcsh
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
 if ($#argv != 0) then
   grep '^##' $0
   exit
 endif
-
-# set path
-set path = (./code/code $path)
 
 # setup
 set sheet = inputs/sample-sheet.tsv

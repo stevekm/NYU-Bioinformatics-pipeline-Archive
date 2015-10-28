@@ -6,13 +6,14 @@
 ## FUNCTION: create sample sheet automatically from input files in fastq-or-alignments directory
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if ($#argv != 0) then
   grep '^##' $0
   exit
 endif
-
-# set path
-set path = (./code/code $path)
 
 # check for duplicate sample names
 set dups = `(cd fastq-or-alignments; ls -1 *.fastq *.fastq.gz *.bam) | sed 's/\.gz$//' | sed 's/\.fastq$//' | sed 's/\.bam$//' | sort | uniq -d | wc -l` 

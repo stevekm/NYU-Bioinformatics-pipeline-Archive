@@ -4,13 +4,14 @@
 ## USAGE: run-pca.sh
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-bashrc
+
+# process command-line inputs
 if [ $# != 0 ]; then
   grep '^##' $0
   exit
 fi
-
-# set path
-PATH=./code/code:$PATH
 
 # process sample sheet
 sheet=inputs/sample-sheet.tsv                                                                         # TODO: the code below will not work for multi-group assignments

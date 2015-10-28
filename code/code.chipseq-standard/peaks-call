@@ -4,13 +4,14 @@
 ## USAGE: peaks-call OUTPUT-DIR PARAMETER-SCRIPT TREATMENT-ALIGNMENTS [CONTROL-ALIGNMENTS]
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if (($#argv < 3) || ($#argv > 4)) then
   grep '^##' $0
   exit
 endif
-
-# set path
-set path = (./code/code $path)
 
 set out = $1
 set param_script = $2

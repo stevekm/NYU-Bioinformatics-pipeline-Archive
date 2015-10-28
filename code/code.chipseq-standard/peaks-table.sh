@@ -4,6 +4,10 @@
 ## USAGE: peaks-table.sh OUTPUT-DIR PARAMETER-SCRIPT PEAK-DIRECTORIES
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-bashrc
+
+# process command-line inputs
 if (($# != 3)); then
   grep '^##' $0
   exit
@@ -13,9 +17,6 @@ fi
 outdir=$1
 params=$2
 peakdirs=($3)
-
-# set path
-PATH=./code/code:$PATH
 
 # parameters
 scripts-send2err "Processing parameter file $params..."

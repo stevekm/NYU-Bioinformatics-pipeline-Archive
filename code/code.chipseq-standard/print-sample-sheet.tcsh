@@ -4,6 +4,9 @@
 ## USAGE: print-sample-sheet SAMPLE-SHEET-TSV
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
 if ($#argv != 1) then
   grep '^##' $0
   exit

@@ -4,6 +4,10 @@
 ## USAGE: matrix-pca OUTPUT-DIR SAMPLE-LABELS SAMPLE-MATRICES
 ##
 
+# shell settings (must be included in all scripts)
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if ($#argv != 3) then
   grep '^##' $0
   exit
@@ -12,9 +16,6 @@ endif
 set out = $1
 set labels = ($2)
 set matrices = ($3)
-
-# set path
-set path = (./code/code $path)
 
 # run PCA
 scripts-create-path $out/

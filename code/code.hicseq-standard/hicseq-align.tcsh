@@ -4,6 +4,10 @@
 ## USAGE: hicseq-align.tcsh OUTPUT-DIR PARAM-SCRIPT FASTQ1 FASTQ2
 ##
 
+# shell settings
+source ./code/code.main/custom-tcshrc
+
+# process command-line inputs
 if ($#argv != 4) then
   grep '^##' $0
   exit
@@ -13,9 +17,6 @@ set out = $1
 set params = $2
 set fastq1 = ($3)
 set fastq2 = ($4)
-
-# set path
-set path = (./code/code $path)
 
 # set parameters
 source $params

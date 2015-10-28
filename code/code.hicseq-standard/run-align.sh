@@ -4,14 +4,15 @@
 ## USAGE: run-align.sh
 ##
 
+# shell settings
+source ./code/code.main/custom-bashrc
+
+# process command-line inputs
 if [ $# != 0 ]
 then
   grep '^##' $0
   exit
 fi
-
-# set path
-PATH=./code/code:$PATH
 
 # create results directory
 scripts-create-path results/
