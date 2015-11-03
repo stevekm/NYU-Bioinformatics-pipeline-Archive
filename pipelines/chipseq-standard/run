@@ -10,8 +10,8 @@ if ($#argv != 0) then
   exit
 endif
 
-# set path
-set path = (./code/code $path)
+# shell settings
+source ./code/code.main/custom-tcshrc
 
 scripts-send2err "PIPELINE STARTING: `date`"
 foreach d (__*)
@@ -21,7 +21,7 @@ scripts-send2err "PIPELINE COMPLETED: `date`"
 
 scripts-send2err ""
 scripts-send2err "Errors below, if any: "
-./code/code/pipeline-errors
+./code/code.main/pipeline-errors
 scripts-send2err ""
 scripts-send2err "Done."
 

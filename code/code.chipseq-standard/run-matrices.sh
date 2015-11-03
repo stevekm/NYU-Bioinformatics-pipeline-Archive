@@ -16,38 +16,12 @@ fi
 # generate matrices
 scripts-send2err "=== Generating matrices ============="
 scripts-create-path results/
-threads=1
 sheet=inputs/sample-sheet.tsv
-jid=()
-# loop over all matrix parameter settings
-for params in $(ls -1 params/params.*.sh); do
- 
-  # loop over all peak parameter settings
-  for peak_params in $(find peaks/results/ -name 'peaks.bed' | sed 's/\/peaks\.[^/]\+\/peaks.bed//' | sort -u); do
-    # create output directory
-    out=results/matrices.$(echo $params | sed 's/.*\///' | sed 's/^params\.//' | sed 's/\.sh$//')/$(echo $peak_params | sed 's/peaks\/results\///')
-    ref_regions=( $(ls -1 $peak_params/peaks.*/peaks.bed) )
-    scripts-send2err "-- out = $out"
+threads=1
+op=matrices
+sh=sh
+scripts-master-loop.sh $threads by-sample ./code/chipseq-$op.$sh results/$op "params/params.*.$sh" peaks/results/by-sample
 
-    # create matrices
-    for aln in $(ls -1d alignments/results/align.*); do
-      sample=$(echo $aln | sed 's/.*\/align\.//')
-      if [ $(cat $sheet | cut -f2 | grep -v '^#' | grep -c "^$sample$") == 0 ]; then
-        scripts-send2err "Warning: sample $sample is not in the sample sheet, removing..."
-        rm -rf $outdir
-        continue
-      fi
-      jid+=( $(scripts-qsub-wrapper $threads ./code/create-matrix.sh $out/matrix.$sample $params $aln/alignments.bam "${ref_regions[*]}") )
-    done
-  done
-done
-
-# wait for all jobs to finish
-scripts-send2err "Waiting for all jobs to finish..."
-scripts-qsub-wait "${jid[*]}"
-
-# done
-scripts-send2err "Done."
 
 
 

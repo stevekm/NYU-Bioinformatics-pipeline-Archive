@@ -1,7 +1,7 @@
 #!/bin/tcsh
 
 ##
-## USAGE: peaks-diff OUTPUT-DIR PARAMETER-SCRIPT X-FILES Y-FILES
+## USAGE: chipseq-peakdiff.tcsh OUTPUT-DIR PARAMETER-SCRIPT X-FILES Y-FILES
 ##
 
 # shell settings (must be included in all scripts)
@@ -40,6 +40,6 @@ cat $out/diff.loss | sed 's/:/\t/' | sed 's/-/\t/' | scripts-sortbed | genomic_r
 # annotate diff-peaks
 ( \
  echo "LOG-FOLD-CHANGE\tDIFF-PEAK-LOCUS\tREGION\tGENE-SYMBOL\tDISTANCE"; \
- cat $out/diff.gain.bed $out/diff.loss.bed | genomic_overlaps annotate $annot_params | cut -f1-3,4,7 | sed 's/:[^:]\+|/\t/' | sort -u \
+ cat $out/diff.gain.bed $out/diff.loss.bed | genomic_overlaps $annot_params | cut -f1-3,4,7 | sed 's/:[^:]\+|/\t/' | sort -u \
 ) >! $out/peakdiff.annotated.tsv
 

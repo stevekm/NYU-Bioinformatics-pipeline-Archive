@@ -23,15 +23,16 @@ if ($dups > 0) then
 endif
 
 set sheet = sample-sheet.tsv
-echo "#FILE-NAME\tSAMPLE-NAME\tCONTROL-SAMPLE-NAME\tGROUPS" >! $sheet
+echo "#SAMPLE-NAME\tGROUPS\tCONTROL-SAMPLE-NAME\tFILE-NAME" >! $sheet
 set files = `cd fastq-or-alignments; ls -1 *.fastq *.fastq.gz *.bam`
 foreach f ($files)
   set sample = `echo $f | sed 's/\.gz$//' | sed 's/\.fastq$//' | sed 's/\.bam$//'`
   set group = `echo $sample | cut -d'-' -f-3`
-  ( echo -n $f'\t'; \
-    echo -n $sample'\t'; \
-    echo -n 'n/a\t'; \
-    echo $group \
+  ( \
+    echo -n $sample'\t' ; \
+    echo -n $group'\t' ; \
+    echo -n 'n/a\t' ; \
+    echo $f \
   ) >> $sheet
 end
 

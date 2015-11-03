@@ -2,5 +2,5 @@
 
 peakdist=500      # max distances between peaks that will be merged
 
-annot_params="-i --upstream-max 100000 --upstream-min 100000 --distance-flag inputs/release/gene.split.bed"
+annot_params="annotate2 -i --upstream-dist 100000 --downstream-dist 100000 --proximal-dist 1000 inputs/release/gene-name.bed"
 

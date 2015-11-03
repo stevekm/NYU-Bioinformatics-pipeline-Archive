@@ -19,7 +19,7 @@ if (`cat $sheet | grep -v '^#' | grep ' ' | wc -l` > 0) then
   exit
 endif
 
-if (`cat $sheet | grep -v '^#' | cut -f2 | sort | uniq -d | wc -l` > 0) then
+if (`cat $sheet | grep -v '^#' | cut -f1 | sort | uniq -d | wc -l` > 0) then
   scripts-send2err 'Error: duplicate sample names are not allowed in sample sheet.'
   exit
 endif

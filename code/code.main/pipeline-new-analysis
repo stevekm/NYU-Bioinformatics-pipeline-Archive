@@ -13,7 +13,7 @@ set pipeline_name = $1
 set analysis_dir = $2
 set symlink = $3
 
-mkdir -p $analysis_dir 
+mkdir -p $analysis_dir
 
 set repo_code_dir = `readlink -f $0 | sed 's/\/[^/]\+$//'`/..
 

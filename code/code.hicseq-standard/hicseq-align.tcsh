@@ -33,7 +33,7 @@ scripts-create-path $out
 if ($aligner == 'gtools') then                    ## Aligner = gtools
 
   if ( ($#fastq1 > 1) || ($#fastq2 > 1)) then
-    script-send2err "Error: gtools_hic align does not allow multiple read pair files."
+    scripts-send2err "Error: gtools_hic align does not allow multiple read pair files."
     exit
   endif
   gtools_hic align -v --work-dir $out/tmp -p $threads $align_params $fastq1 $fastq2 | samtools view -T $release/../bowtie2.index/genome.fa -b1 - >! $out/alignments.bam
@@ -49,7 +49,7 @@ else if ($aligner == 'bowtie2') then              ## Aligner = bowtie2
 
 
 else
-  script-send2err "Error: unknown aligner $aligner."
+  scripts-send2err "Error: unknown aligner $aligner."
   exit
 endif
 

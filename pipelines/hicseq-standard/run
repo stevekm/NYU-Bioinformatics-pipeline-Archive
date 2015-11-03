@@ -13,9 +13,6 @@ endif
 # shell settings
 source ./code/code.main/custom-tcshrc
 
-# set path
-set path = (./code/code $path)
-
 scripts-send2err "PIPELINE STARTING: `date`"
 foreach d (__*)
   ( cd $d; ./run )

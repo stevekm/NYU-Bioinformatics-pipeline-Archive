@@ -1,0 +1,9 @@
+INSTRUCTIONS
+
+Go into inputs directory and read the README file.
+
+Then, return to this directory and start the pipeline as follows:
+
+./code/code.main/pipeline-execute PROJECT-NAME E-MAIL
+
+

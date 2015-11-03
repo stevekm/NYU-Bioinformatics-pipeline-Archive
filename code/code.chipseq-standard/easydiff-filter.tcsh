@@ -1,7 +1,7 @@
 #!/bin/tcsh
 
 ##
-## USAGE: easydiff-filter EASYDIFF-DIRECTORY PARAMETERS
+## USAGE: easydiff-filter.tcsh EASYDIFF-DIRECTORY PARAMETERS
 ##
 
 # shell settings (must be included in all scripts)

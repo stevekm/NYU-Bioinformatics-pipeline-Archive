@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## USAGE: create-matrix.sh OUTPUT-DIR PARAMETER-SCRIPT ALIGNMENT-FILES REF-REGIONS
+## USAGE: create-matrix.sh OUTPUT-DIR PARAMETER-SCRIPT PEAKS-BRANCH SAMPLE-NAMES
 ##
 
 # shell settings (must be included in all scripts)
@@ -15,11 +15,11 @@ fi
 
 outdir=$1
 params=$2
-alignments=$3
-ref_regions=($4)
+peaks_branch=$3
+samples=($4)
 
-# set path
-PATH=./code/code:$PATH
+# create record of input branch(es) [TODO: need to figure out a way to do a relative symlink]
+echo $peaks_branch > $outdir/obj.branch
 
 # parameters
 scripts-send2err "Processing parameter file $params..."
@@ -27,6 +27,12 @@ source $params
 scripts-send2err "- window = $win"
 scripts-send2err "- flank = $flank"
 scripts-send2err "- nbins = $nbins"
+
+# determine input files
+sheet=inputs/sample-sheet.tsv
+aln_branch=$(cat $peaks_branch/*/obj.branch | head -1)
+alignments=( $(echo $samples | tr ' ' '\n' | awk -v d=$aln_branch '{print d"/"$0"/alignments.bam"}') )
+ref_regions=( $(ls -1 $peaks_branch/*/peaks.bed) )
 
 # create ref.bed
 scripts-create-path $outdir/

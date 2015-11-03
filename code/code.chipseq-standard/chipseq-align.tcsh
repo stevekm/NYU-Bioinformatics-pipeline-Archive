@@ -1,9 +1,9 @@
 #!/bin/tcsh
 
 ##
-## USAGE #1: chipseq-align OUTPUT-DIR PARAMETER-SCRIPT FASTQ-R1 [FASTQ-R2]
+## USAGE #1: chipseq-align.tcsh OUTPUT-DIR PARAMETER-SCRIPT FASTQ-R1 [FASTQ-R2]
 ##
-## USAGE #2: chipseq-align OUTPUT-DIR PARAMETER-SCRIPT BAM-FILE
+## USAGE #2: chipseq-align.tcsh OUTPUT-DIR PARAMETER-SCRIPT BAM-FILE
 ##
 
 # shell settings (must be included in all scripts)

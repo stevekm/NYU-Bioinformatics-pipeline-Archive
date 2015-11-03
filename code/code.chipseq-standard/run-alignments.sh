@@ -23,8 +23,8 @@ scripts-create-path results/
 # read from sample sheet(s)
 sheet=inputs/sample-sheet.tsv
 ./code/validate-sample-sheet.tcsh $sheet
-Q=( $(cat $sheet | grep -v '^#' | cut -f1) )           # file names (fastq or bam)
-S=( $(cat $sheet | grep -v '^#' | cut -f2) )           # sample names
+Q=( $(cat $sheet | grep -v '^#' | cut -f4) )           # file names (fastq or bam)
+S=( $(cat $sheet | grep -v '^#' | cut -f1) )           # sample names
 
 # align
 scripts-send2err "=== Aligning reads ============="
@@ -34,11 +34,11 @@ k=0
 while (( $k < ${#Q[@]} )); do
   q=$(echo ${Q[$k]} | tr ',' '\n' | sed 's/^/inputs\/fastq-or-alignments\//' | tr '\n' ',' | sed 's/,$//')      # this allows comma-separated fastq files
   qname=${S[$k]}
-  outdir=results/align.$qname
-  jid+=( $(scripts-qsub-wrapper $threads ./code/chipseq-align $outdir $params $q) )
+  outdir=results/$qname
+  jid+=( $(scripts-qsub-wrapper $threads ./code/chipseq-align.tcsh $outdir $params $q) )
   let k=k+1
 done
-         
+
 # wait for all processes
 scripts-send2err "Waiting for all jobs to finish..."
 scripts-qsub-wait "${jid[*]}"

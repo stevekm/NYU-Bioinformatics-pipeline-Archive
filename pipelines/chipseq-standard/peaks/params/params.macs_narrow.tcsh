@@ -1,7 +1,5 @@
-#!/bin/tcsh
 
-set tool = "easydiff"
-set diff_params = "--normalize=normq --scale=log2 --method=mean --fc-cutoff=2.0 --val-cutoff=0"
+module load macs/2.0.10.20131216
+set macs_params = "--nomodel --extsize=400"
 set annot_params = "annotate2 -i --upstream-dist 100000 --downstream-dist 100000 --proximal-dist 1000 inputs/release/gene-name.bed"
-
 
