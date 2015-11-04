@@ -1,11 +1,9 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc         # customize shell environment
 
 ##
-## USAGE: hicseq-align.tcsh OUTPUT-DIR PARAM-SCRIPT FASTQ1 FASTQ2
+## USAGE: hicseq-align.tcsh OUTPUT-DIR PARAM-SCRIPT FASTQ-DIR SAMPLE
 ##
-
-# shell settings
-source ./code/code.main/custom-tcshrc
 
 # process command-line inputs
 if ($#argv != 4) then
@@ -15,8 +13,13 @@ endif
 
 set out = $1
 set params = $2
-set fastq1 = ($3)
-set fastq2 = ($4)
+set fastq_dir = $3
+set sample = $4
+
+# determine input fastq filenames
+set sheet = inputs/sample-sheet.tsv
+set fastq1 = `cat $sheet | awk -v s=$sample '$1==s' | cut -f3 | tr ',' '\n' | awk -v d=$fastq_dir '{print d"/"$0}'`
+set fastq2 = `cat $sheet | awk -v s=$sample '$1==s' | cut -f4 | tr ',' '\n' | awk -v d=$fastq_dir '{print d"/"$0}'`
 
 # set parameters
 source $params

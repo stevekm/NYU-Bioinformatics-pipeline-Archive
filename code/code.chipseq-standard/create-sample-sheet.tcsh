@@ -39,9 +39,9 @@ end
 cat $sheet
 
 echo "tissue/cell-line: "
-grep -v '^#' $sheet | cut -f2 | cut -d'-' -f1 | sort | uniq -c
+grep -v '^#' $sheet | cut -f1 | cut -d'-' -f1 | sort | uniq -c
 echo "treatment: "
-grep -v '^#' $sheet | cut -f2 | cut -d'-' -f2 | sort | uniq -c
+grep -v '^#' $sheet | cut -f1 | cut -d'-' -f2 | sort | uniq -c
 echo "ChIP: "
-grep -v '^#' $sheet | cut -f2 | cut -d'-' -f3 | sort | uniq -c
+grep -v '^#' $sheet | cut -f1 | cut -d'-' -f3 | sort | uniq -c
 

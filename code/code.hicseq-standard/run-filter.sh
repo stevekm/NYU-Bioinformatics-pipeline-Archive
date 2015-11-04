@@ -20,6 +20,6 @@ scripts-create-path results/
 # filter
 scripts-send2err "=== Filtering alignments ============="
 threads=2
-scripts-master-loop.sh $threads ./code/hicseq-filter.tcsh results/filter "params/params.*.tcsh" align/results
+scripts-master-loop.sh $threads by-sample ./code/hicseq-filter.tcsh results/filter "params/params.*.tcsh" align/results
 
 
