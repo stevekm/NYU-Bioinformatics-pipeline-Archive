@@ -13,6 +13,15 @@ endif
 # shell settings
 source ./code/code.main/custom-tcshrc
 
+# validate sample sheet
+scripts-send2err "Validating sample sheet..."
+./code/validate-sample-sheet.tcsh inputs/sample-sheet.tsv
+if ($status != 0) then
+  scripts-send2err "Errors found in sample sheet, aborting..."
+  exit 1
+endif
+
+# start pipeline
 scripts-send2err "PIPELINE STARTING: `date`"
 foreach d (__*)
   ( cd $d; ./run )

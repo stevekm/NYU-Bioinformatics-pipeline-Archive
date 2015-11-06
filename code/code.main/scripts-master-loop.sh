@@ -46,7 +46,17 @@ for p in ${paramset[*]}; do
   #
   for branch in ${branches[*]}; do
 
-    if [ $method == "by-sample" ]; then
+    if [ $method == "by-object" ]; then
+      #
+      # loop over all objects in the branch
+      #
+      objects=( $(cd $inpdir/$branch; ls -1 */job.sh | sed 's/\/job.sh$//') )
+      for obj in ${objects[*]}; do
+        outdir=$outpref.$pname/$branch/$obj
+        jid+=( $(scripts-qsub-wrapper $threads $operation $outdir $p $inpdir/$branch $obj) )
+      done
+
+    elif [ $method == "by-sample" ]; then
       #
       # loop over all samples
       #

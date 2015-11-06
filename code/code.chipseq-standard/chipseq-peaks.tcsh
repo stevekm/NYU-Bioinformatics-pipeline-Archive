@@ -21,16 +21,20 @@ set samples = ($4)
 # create record of input branch(es) [TODO: need to figure out a way to do a relative symlink]
 echo $branch >! $out/obj.branch
 
-# determine input files
-set sheet = inputs/sample-sheet.tsv
-set treatment_aln = `echo $samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
-set control_aln = `echo $samples | tr ' ' '\n' | sed 's/^/^/' | sed 's/$/\t/' | grep -f - $sheet | cut -f3 | grep -vi '^n/a$' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
-
 # set parameters
 source $param_script
 scripts-send2err "-- Parameters: "
 scripts-send2err "- macs = $macs_params"
 scripts-send2err "- annotation = $annot_params"
+
+# determine input files
+set sheet = inputs/sample-sheet.tsv
+set treatment_aln = `echo $samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
+if ($use_input == 'false') then
+  set control_aln = 
+else
+  set control_aln = `echo $samples | tr ' ' '\n' | sed 's/^/^/' | sed 's/$/\t/' | grep -f - $sheet | cut -f3 | grep -vi '^n/a$' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
+endif
 
 # run macs2
 if ($#control_aln > 0) set control_aln = "-c $control_aln"

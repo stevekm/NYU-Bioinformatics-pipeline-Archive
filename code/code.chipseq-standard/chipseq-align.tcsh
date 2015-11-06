@@ -67,6 +67,9 @@ java -Xms8G -Xmx16G -jar $picard_root/MarkDuplicates.jar \
  INPUT=$out_dir/alignments_sorted.bam \
  OUTPUT=$out_dir/alignments.bam
 
+# index
+samtools index $out_dir/alignments.bam
+
 # stats
 scripts-send2err "Computing statistics..."
 if ($R1 != '') then
