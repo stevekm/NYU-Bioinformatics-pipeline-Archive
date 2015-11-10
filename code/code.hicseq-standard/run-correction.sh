@@ -20,6 +20,6 @@ scripts-create-path results/
 # matrix
 scripts-send2err "=== Generating corrected matrix ============="
 threads=1
-scripts-master-loop.sh $threads by-object ./code/hicseq-ic.tcsh results/estimation "params/params.*.tcsh" matrix/results
+scripts-master-loop.sh $threads by-object ./code/hicseq-ic.tcsh results/estimation "params/params.*.tcsh" matrix.filtered/results
 
 

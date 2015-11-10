@@ -211,7 +211,7 @@ Output files:\
   sample_class = factor(sample_class,levels=unique(sample_class))
   n_classes = length(unique(sample_class))
   if (opt$palette=='') {
-    samplePalette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+    samplePalette = rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"),10)
   } else {  
     samplePalette = read.table(opt$palette,header=FALSE,sep='\t',check.names=FALSE,row.names=NULL,as.is=TRUE,comment.char='')[,1]
   }
@@ -258,8 +258,8 @@ Output files:\
   for (k in 1:n_matrices) {
     group_palette = colorRampPalette(c('white',sampleColors[sample_class[k]]))(n=100)
     jj = j+n_bins[k]-1
-    if (opt$nclust==1) img = t(apply(Yfilt,2,rev)[,j:jj])     # keep existing order if nclust=1
-    else img = Yfilt[order(Cobj$cluster,decreasing=FALSE),j:jj]   # otherwise, order by cluster number   # TODO: check this
+    if (opt$nclust==1) img = t(apply(Yfilt,2,rev)[,j:jj])                  # keep existing order if nclust=1
+    else img = t(Yfilt[order(Cobj$cluster,decreasing=TRUE),j:jj])          # otherwise, order by cluster number   # TODO: check this
     image(img,zlim=zlim,xaxt='n',yaxt='n',col=group_palette)
     mtext(text=Xlabels[k],side=1,las=2,cex=1.5)
     j = jj+1

@@ -28,12 +28,12 @@ scripts-send2err "- macs = $macs_params"
 scripts-send2err "- annotation = $annot_params"
 
 # determine input files
-set sheet = inputs/sample-sheet.tsv
 set treatment_aln = `echo $samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
 if ($use_input == 'false') then
   set control_aln = 
 else
-  set control_aln = `echo $samples | tr ' ' '\n' | sed 's/^/^/' | sed 's/$/\t/' | grep -f - $sheet | cut -f3 | grep -vi '^n/a$' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
+  set control_samples = `./code/query-sample-sheet.tcsh control "$samples"` 
+  set control_aln = `echo $control_samples | tr ' ' '\n' | sort -u | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`   # TODO: if we keep 'sort -u', the order information is lost...
 endif
 
 # run macs2

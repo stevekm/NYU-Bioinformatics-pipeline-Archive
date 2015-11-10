@@ -71,7 +71,7 @@ for p in ${paramset[*]}; do
       #
       for g in ${groups[*]}; do
         outdir=$outpref.$pname/$branch/$g
-        gsamples=( $(cat $sheet | grep -v '^#' | tr '|' ' ' | key_expand | awk -v g=$g '$2==g' | cut -f1) )
+        gsamples=( $(cat $sheet | grep -v '^#' | cut -f1,2 | tr '|' ' ' | key_expand | awk -v g=$g '$2==g' | cut -f1) )
         jid+=( $(scripts-qsub-wrapper $threads $operation $outdir $p $inpdir/$branch "${gsamples[*]}") )
       done
       
