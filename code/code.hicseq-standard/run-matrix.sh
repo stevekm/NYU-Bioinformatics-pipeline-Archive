@@ -25,6 +25,6 @@ cat $release/../DNA/genome.bed | cols -t 0 1 2 0 > results/genome.bed
 # matrix
 scripts-send2err "=== Generating contact matrices ============="
 threads=2
-scripts-master-loop.sh $threads by-group ./code/hicseq-matrix.tcsh results/matrix "params/params.*.tcsh" filter/results
+scripts-master-loop.sh $threads by-group ./code/hicseq-matrix.tcsh results/matrix_filtered "params/params.*.tcsh" filter/results
 
 

@@ -4,4 +4,8 @@ filter
 
 matrix.filtered
 
+matrix.scaled
+
 matrix.ic
+
+matrix.estimate

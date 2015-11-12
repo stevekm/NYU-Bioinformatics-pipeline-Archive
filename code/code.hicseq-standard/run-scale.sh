@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## USAGE: run-matrix.sh
+## USAGE: run-scale.sh
 ##
 
 # shell settings
@@ -18,8 +18,8 @@ fi
 scripts-create-path results/
 
 # matrix
-scripts-send2err "=== Generating corrected matrix ============="
+scripts-send2err "=== Generating scaled matrices ============="
 threads=1
-scripts-master-loop.sh $threads by-object ./code/hicseq-ic.tcsh results/estimation "params/params.*.tcsh" matrix.filtered/results
+scripts-master-loop.sh $threads by-object ./code/hicseq-scale.tcsh results/matrix_scaled "params/params.*.tcsh" matrix.filtered/results
 
 

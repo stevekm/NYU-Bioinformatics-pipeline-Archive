@@ -29,8 +29,8 @@ rm -f code
 if ($symlink == 'true') then
   ln -s $repo_code_dir/code.$pipeline_name code
 else
-  rsync -auv $repo_code_dir/ code.main
-  ln -s code.main/code.$pipeline_name code
+  rsync -auv $repo_code_dir/ code.repo
+  ln -s code.repo/code.$pipeline_name code
 endif
 
 
