@@ -1,5 +1,7 @@
 alignments
 
+qc
+
 peaks
 peaktable
 

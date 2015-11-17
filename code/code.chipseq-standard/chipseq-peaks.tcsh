@@ -29,15 +29,16 @@ scripts-send2err "- annotation = $annot_params"
 
 # determine input files
 set treatment_aln = `echo $samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
-if ($use_input == 'false') then
-  set control_aln = 
-else
-  set control_samples = `./code/query-sample-sheet.tcsh control "$samples"` 
-  set control_aln = `echo $control_samples | tr ' ' '\n' | sort -u | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`   # TODO: if we keep 'sort -u', the order information is lost...
+set control_aln = 
+if ($use_input != 'false') then
+  set control_samples = `./code/query-sample-sheet.tcsh control "$samples" | sort -u` 
+  if ("$control_samples" != "") then
+    set control_aln = `echo $control_samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`   # TODO: if we keep 'sort -u', the order information is lost...
+    set control_aln = "-c $control_aln"
+  endif
 endif
 
 # run macs2
-if ($#control_aln > 0) set control_aln = "-c $control_aln"
 set genome = `readlink -f inputs/release/.. | sed 's/.*\///' | cut -d'_' -f1`
 set gsize = `grep "^$genome	" params/gsize.info.txt | cut -f2`
 if ($gsize == "") then
