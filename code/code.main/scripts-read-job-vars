@@ -1,0 +1,25 @@
+#!/bin/tcsh
+source ./code/code.main/custom-tcshrc         # customize shell environment
+
+##
+## USAGE: scripts-read-job-vars INPUT-DIR VARIABLE-NAMES
+##
+
+# process command-line inputs
+if ($#argv != 2) then
+  grep '^##' $0
+  exit
+endif
+
+set inpdir = $1
+set vars = ($2)
+
+# read variables
+foreach name ($vars)
+  set value = `cat $inpdir/job.vars.tsv | grep "^$name	" | cut -f2`
+  scripts-send2err "$name = $value"
+  set $name = $value
+end
+
+
+

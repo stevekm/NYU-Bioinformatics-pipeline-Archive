@@ -1,0 +1,23 @@
+#!/bin/tcsh
+
+##
+## USAGE: run
+##
+
+if ($#argv != 0) then
+  grep '^##' $0
+  exit
+endif
+
+unalias cp
+ln -s genome/bowtie2.index
+ln -s genome/DNA/features
+cp genome/DNA/centrotelo.bed .
+cat genome/DNA/genome.bed | cols -t 0 1 2 0 >! genome.bed
+
+cp genome/DNA/features/*.effective.reg .
+cp genome/DNA/features/*.gc.reg .
+cp genome/DNA/features/*.mappability.reg .
+
+
+

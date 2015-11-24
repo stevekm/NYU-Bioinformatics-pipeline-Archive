@@ -96,8 +96,9 @@ Output files:\
     make_option(c("--normalize"), default="rowmax", help="Matrix normalization: none, max, mean, rowmax (default), rowrange, or rowmean."),
     make_option(c("--log2"), default="false", help="Log2 transformation: false (default) or true."),
     make_option(c("--row-filter"), default="", help="File containing labels of rows to be used [default=\"%default\"]."),
-    make_option(c("--max-cutoff"), default=2.0, help="Filter out rows whose maximum value is less than this cutoff [default=%default]."),
-    make_option(c("--sd-cutoff"), default=2.0, help="Filter out rows whose standard deviation is less than this cutoff [default=%default]."),
+    make_option(c("--n-best"), default=2000, help="Keep top rows ranked by range [default=%default]."),
+    make_option(c("--diff"), default=0.5, help="Filter out rows that have small differences from min to max [default=%default]."),
+    make_option(c("--use-short-names"), action="store_true",default=FALSE, help="Use only second part of the name (after the colon)."),
     make_option(c("--nclust"), default=5, help="Number of clusters [default=%default]."),
     make_option(c("--release-dir"), default="", help="ENSEMBL release directory for GSEA sets [default=\"%default\"]."),
     make_option(c("--use-refg"), action="store_true",default=FALSE, help="Use reference set of genes for GSEA analysis [default=FALSE]."),
@@ -117,7 +118,7 @@ Output files:\
   
   # Error checking on input arguments
   if (outdir=="") { write('Error: please specify output directory!',stderr()); quit(save='no'); }
-  if (file.exists(outdir)==FALSE) { dir.create(outdir) } else { write('Error: output directory already exists!',stderr()); quit(save='no'); }
+  if (file.exists(outdir)==FALSE) { dir.create(outdir) } else { write('Warning: output directory already exists, overwriting!',stderr()) }
   if ((opt$palette!='')&(file.exists(opt$palette)==FALSE)) { write('Error: cannot open palette file!',stderr()); quit(save='no'); }
       
   # read sample labels and matrices
@@ -125,7 +126,9 @@ Output files:\
   dataset = read.table(fdataset,header=FALSE,sep='\t',check.names=FALSE,row.names=NULL,stringsAsFactors=FALSE)
   colnames(dataset) = c('labels','files')
   if (sum(duplicated(dataset$labels))>0) { write('Error: sample labels must be unique!',stderr()); quit(save='no') }
-  Xlabels = dataset$labels
+  Xlabels_long = dataset$labels
+  if (opt$"use-short-names"==FALSE) { Xlabels = Xlabels_long } else { Xlabels = as.vector(sapply(Xlabels_long,function(x){strsplit(x,':')[[1]][2]})) }
+
   n_matrices = length(dataset$files)
   Xraw = lapply(dataset$files,read.table,header=TRUE,sep='\t',check.names=FALSE,row.names=NULL,stringsAsFactors=TRUE)
   n_bins = sapply(Xraw,ncol)-1
@@ -134,17 +137,17 @@ Output files:\
     if (sum(duplicated(Xraw[[k]]$ID))>0) { write(paste('Error: duplicate IDs found in matrix file "',dataset$files[k],'"!',sep=''),stderr()); quit(save='no') }
   }
 
-  # join matrices
+  # [Yjoined] join matrices
   if (opt$verbose) { write('Joining matrices...',stderr()) }
   Xjoined = multi_merge(Xraw)                       # join all matrices
   IDjoined = as.vector(Xjoined[,1])                 # matrix row IDs (e.g. gene names)
   Yjoined = as.matrix(Xjoined[,2:ncol(Xjoined)])    # joined matrix values-only
   
-  # split joined matrix Y into original groups (will be submatrices of Xraw if row IDs are not identical across all matrices)
+  # [Ysplit] split joined matrix Y into original groups (will be submatrices of Xraw if row IDs are not identical across all matrices)
   Ysplit = {}
   j = 1; for (k in 1:n_matrices) { jj = j+n_bins[k]-1; Ysplit[[k]] = Yjoined[,j:jj]; j = jj+1 }
 
-  # normalize joined matrix Y
+  # [Ynorm] normalize joined matrix Y
   if (opt$verbose) { write('Normalizing data...',stderr()); }
   if (opt$normalize=="none") {
     Ynorm = Yjoined
@@ -162,10 +165,19 @@ Output files:\
     Ynorm = do.call(cbind,lapply(Ysplit,function(b) b/apply(b,1,mean)))
     Ynorm[is.na(Ynorm)] = 0
   }
+
+  # [Ynorm] log2 transform
   if (opt$log2) { Ynorm[Ynorm<=0] = min(Ynorm[Ynorm>0]); Ynorm = log2(Ynorm); Ynorm = Ynorm-min(Ynorm) }
+
+  # [Ymax, Yscore, Ydiff] calculate metrics for each row to be used for filtering
+  Ymax = matrix(0,nrow(Ynorm),n_matrices)
+  j = 1; for (k in 1:n_matrices) { jj = j+n_bins[k]-1; Ymax[,k] = apply(Ynorm[,j:jj],1,max); j = jj+1 }
+  Yscore = apply(Ymax,1,max)-apply(Ymax,1,min)
+  Ydiff = 1-apply(Ymax,1,min)/apply(Ymax,1,max)
   
-  # filter by row label, max value and stdev
-  Ifiltered = (apply(Yjoined,1,max)>=opt$"max-cutoff")&(apply(Yjoined,1,sd)>=opt$"sd-cutoff")
+  # [Yfilt] filter by row label, fold-change and range
+  Ifiltered = Ydiff>=opt$"diff"
+  Ifiltered = Ifiltered&(Yscore>=sort(Yscore,decreasing=TRUE)[min(opt$"n-best",length(Yscore))])
   if (opt$"row-filter"!='') {
     row_labels = read.table(opt$"row-filter",header=FALSE,sep='\t',check.names=FALSE,row.names=NULL,as.is=TRUE,comment.char='')[,1]
     Ifiltered = Ifiltered&(IDjoined %in% row_labels)
@@ -178,7 +190,9 @@ Output files:\
   if (opt$nclust>1) {
     # cluster
     if (opt$verbose) { write('Clustering...',stderr()); }
-    Cobj = kmeans(Yfilt,opt$nclust,iter.max=1000,nstart=10)
+    Ysum = matrix(0,nrow(Yfilt),n_matrices)
+    j = 1; for (k in 1:n_matrices) { jj = j+n_bins[k]-1; Ysum[,k] = apply(Yfilt[,j:jj],1,sum); j = jj+1 }
+    Cobj = kmeans(Ysum,opt$nclust,iter.max=1000,nstart=10)
     
     # re-order clusters
     if (opt$verbose) { write('Re-ordering clusters...',stderr()); }
@@ -207,20 +221,22 @@ Output files:\
   write.table(Cdata,file=paste(outdir,'/clustering.txt',sep=''),row.names=F,col.names=F,quote=F,sep='\t')
   
   # define sample colors
-  sample_class = sub(':.*','',Xlabels)
+  sample_class = sub(':.*','',Xlabels_long)
   sample_class = factor(sample_class,levels=unique(sample_class))
   n_classes = length(unique(sample_class))
   if (opt$palette=='') {
-    samplePalette = rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"),10)
+    samplePalette = rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#00E442", "#0072B2", "#D55E00", "#CC79A7"),10)
   } else {  
     samplePalette = read.table(opt$palette,header=FALSE,sep='\t',check.names=FALSE,row.names=NULL,as.is=TRUE,comment.char='')[,1]
   }
   sampleColors = rep(samplePalette,n_classes/length(samplePalette)+1)
   
+  
   # profiles
   if (opt$verbose) { write('Creating profiles...',stderr()); }
   centers = {}        # cluster centers by sample
-  j = 1; for (k in 1:n_matrices) { jj = j+n_bins[k]-1; centers[[k]] = Cobj$centers[,j:jj,drop=FALSE]; colnames(centers[[k]]) = 1:n_bins[k]; j = jj+1 }
+  Z = t(sapply(1:max(Cobj$cluster),function(c) apply(Yfilt[Cobj$cluster==c,],2,mean)))
+  j = 1; for (k in 1:n_matrices) { jj = j+n_bins[k]-1; centers[[k]] = Z[,j:jj,drop=FALSE]; colnames(centers[[k]]) = 1:n_bins[k]; j = jj+1 }
   names(centers) = Xlabels
   m = melt(centers)      # data frame
   colnames(m) = c('cluster','bin','val','sample') 
@@ -249,7 +265,7 @@ Output files:\
   layout(matrix(1:(n_matrices+1),1,n_matrices+1),widths=c(0.025,0.975*n_bins/sum(n_bins)))                                 # create layout
   par(mar=c(15,0,0,0),oma=c(2,2,2,2),cex=1)
   a = c(1,sapply(1:opt$nclust,function(x) which(sort(Cobj$cluster,decreasing=TRUE)==x)[1]-1)/(length(Cobj$cluster)-1))     # create cluster color band (rows)
-  clustPalette = c('blue','red','green4','cyan','pink','brown','yellow','magenta','blue','purple')
+  clustPalette = c('blue','red','green4','cyan','pink','brown','magenta','blue','purple')
   clustColors = rep(clustPalette,length(Cobj$cluster)/length(clustPalette)+1)
   image(matrix(0,1),axes=FALSE,xlim=c(0,1),ylim=c(0,1))
   for (k in 1:opt$nclust) rect(0,a[k+1],1,a[k],col=clustColors[k],border=NA)
@@ -261,7 +277,7 @@ Output files:\
     if (opt$nclust==1) img = t(apply(Yfilt,2,rev)[,j:jj])                  # keep existing order if nclust=1
     else img = t(Yfilt[order(Cobj$cluster,decreasing=TRUE),j:jj])          # otherwise, order by cluster number   # TODO: check this
     image(img,zlim=zlim,xaxt='n',yaxt='n',col=group_palette)
-    mtext(text=Xlabels[k],side=1,las=2,cex=1.5)
+    mtext(text=Xlabels[k],side=1,las=2,cex=1.0)
     j = jj+1
   }
   dev.off();
@@ -285,7 +301,7 @@ Output files:\
 
   # save and exit
   if (opt$verbose) { write('Saving data...',stderr()); }
-  save(Xraw,Xlabels,IDjoined,Yjoined,Ysplit,Ynorm,Yfilt,IDfilt,Cobj,Cdata,cluster_order,file=paste(outdir,'/clustering.RData',sep=''));
+#  save(Xraw,Xlabels,Ynorm,Yfilt,Ifiltered,IDfilt,Cobj,Cdata,cluster_order,file=paste(outdir,'/clustering.RData',sep=''));
   if (opt$verbose) { write('Done.',stderr()); }
 }
 

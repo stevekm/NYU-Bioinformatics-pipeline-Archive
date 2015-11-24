@@ -15,6 +15,9 @@ set params = $2
 set branch = $3
 set sample = $4
 
+# read variables from input branch
+source ./code/code.main/scripts-read-job-vars $branch/$sample "genome genome_dir enzyme bin_size"
+
 # run parameter script
 source $params
 
@@ -22,8 +25,7 @@ source $params
 scripts-create-path $outdir/
 
 # setup
-set release = inputs/release
-cat $release/genome.bed | genomic_regions win -s ${res}000 -d ${res}000 | genomic_overlaps subset -i $release/../DNA/centrotelo.bed | genomic_regions shiftp -5p 1 -3p 0 | sed 's/\t/:/' | sed 's/\t/-/' >! $outdir/ignored_loci.txt
+cat $genome_dir/genome.bed | genomic_regions win -s $bin_size -d $bin_size | genomic_overlaps subset -i $genome_dir/centrotelo.bed | genomic_regions shiftp -5p 1 -3p 0 | sed 's/\t/:/' | sed 's/\t/-/' >! $outdir/ignored_loci.txt
 
 # run estimation
 set inpdir = $branch/$sample
@@ -35,5 +37,7 @@ foreach mat (`cd $inpdir; ls -1 matrix.*.tsv | grep -vw 'chrM'`)
   end
 end
 
+# save variables
+set >! $outdir/job.vars.tsv
 
 

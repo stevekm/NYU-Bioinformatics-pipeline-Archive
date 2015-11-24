@@ -1,11 +1,9 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc     # shell settings
 
 ##
 ## USAGE: hic-filter.tcsh OUTPUT-DIR PARAM-SCRIPT ALIGNMENT-BRANCH SAMPLE
 ##
-
-# shell settings
-source ./code/code.main/custom-tcshrc
 
 # process command-line inputs
 if ($#argv != 4) then
@@ -13,30 +11,27 @@ if ($#argv != 4) then
   exit
 endif
 
-set out = $1
+set outdir = $1
 set params = $2
-set aln_branch = $3
+set branch = $3
 set sample = $4
 
 # run parameter script
 source $params
 
-# create path
-scripts-create-path $out/
+# indentify genome directory
+set genome = `cat $sheet | awk -v s=$sample '$1==s' | cut -f5`
+set enzyme = `cat $sheet | awk -v s=$sample '$1==s' | cut -f6`
+set genome_dir = inputs/genomes/$genome
 
-# determine enzyme name
-if (`echo $sample | grep -ic '\-NcoI'` == 1) then
-  set enzyme = NcoI
-else if (`echo $sample | grep -ic '\-HindIII'` == 1) then
-  set enzyme = HindIII
-else
-  scripts-send2err "Error: enzyme information not embedded in file name, aborting..."
-  exit
-endif
+# create path
+scripts-create-path $outdir/
 
 # filter
-samtools view $aln_branch/$sample/alignments.bam | gtools_hic filter -v -E $release/../DNA/$enzyme.fragments.bed $filter_params | gzip >! $out/filtered.reg.gz
+samtools view $branch/$sample/alignments.bam | gtools_hic filter -v -E $genome_dir/$enzyme.fragments.bed $filter_params | gzip >! $outdir/filtered.reg.gz
 
+# save variables
+set >! $outdir/job.vars.tsv
 
 
 

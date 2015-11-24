@@ -11,7 +11,7 @@ set sec = $2
 if ($sec == '') set sec = 5 
 
 set flag = `scripts-create-temp`
-echo "echo > $flag.done" >> $flag
+echo "touch $flag.done" >> $flag
 chmod +x $flag
 (qsub -hold_jid `echo $job_ids | tr ' ' ','` -cwd ./$flag) >& /dev/null
 while (1)

@@ -16,18 +16,18 @@ set params = $2
 set fastq_dir = $3
 set sample = $4
 
-# determine input fastq filenames
-set sheet = inputs/sample-sheet.tsv
-set fastq1 = `cat $sheet | awk -v s=$sample '$1==s' | cut -f3 | tr ',' '\n' | awk -v d=$fastq_dir '{print d"/"$0}'`
-set fastq2 = `cat $sheet | awk -v s=$sample '$1==s' | cut -f4 | tr ',' '\n' | awk -v d=$fastq_dir '{print d"/"$0}'`
-
 # set parameters
+send2err "Setting parameters..."
 source $params
 if (! $?NSLOTS) then
   set threads = 8
 else
   set threads = $NSLOTS
 endif
+
+# determine input fastq filenames
+set fastq1 = `cat $sheet | awk -v s=$sample '$1==s' | cut -f3 | tr ',' '\n' | awk -v d=$fastq_dir '{print d"/"$0}'`
+set fastq2 = `cat $sheet | awk -v s=$sample '$1==s' | cut -f4 | tr ',' '\n' | awk -v d=$fastq_dir '{print d"/"$0}'`
 
 # create path
 scripts-create-path $out
@@ -39,15 +39,15 @@ if ($aligner == 'gtools') then                    ## Aligner = gtools
     scripts-send2err "Error: gtools_hic align does not allow multiple read pair files."
     exit
   endif
-  gtools_hic align -v --work-dir $out/tmp -p $threads $align_params $fastq1 $fastq2 | samtools view -T $release/../bowtie2.index/genome.fa -b1 - >! $out/alignments.bam
+  gtools_hic align -v --work-dir $out/tmp -p $threads $align_params --bowtie-index $genome_index $fastq1 $fastq2 | samtools view -T $genome_index.fa -b1 - >! $out/alignments.bam
   rm -rf $out/tmp
 
 
 else if ($aligner == 'bowtie2') then              ## Aligner = bowtie2
 
-  bowtie2 -p $threads $align_params --sam-nohead -U `echo $fastq1 | tr ' ' ','` -S $out/alignments.R1.sam
-  bowtie2 -p $threads $align_params --sam-nohead -U `echo $fastq2 | tr ' ' ','` -S $out/alignments.R2.sam
-  paste -d'\n' $out/alignments.R1.sam $out/alignments.R2.sam | samtools view -T $release/../bowtie2.index/genome.fa -b1 - >! $out/alignments.bam
+  bowtie2 -p $threads $align_params -x $genome_index --sam-nohead -U `echo $fastq1 | tr ' ' ','` -S $out/alignments.R1.sam
+  bowtie2 -p $threads $align_params -x $genome_index --sam-nohead -U `echo $fastq2 | tr ' ' ','` -S $out/alignments.R2.sam
+  paste -d'\n' $out/alignments.R1.sam $out/alignments.R2.sam | samtools view -T $genome_index.fa -b1 - >! $out/alignments.bam
   rm -f $out/alignments.R1.sam $out/alignments.R2.sam
 
 
@@ -56,6 +56,9 @@ else
   exit
 endif
 
+
+# save variables
+set >! $out/obj.params.tsv
 
 
 
