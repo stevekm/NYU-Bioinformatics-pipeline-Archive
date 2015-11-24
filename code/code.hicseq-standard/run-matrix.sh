@@ -17,11 +17,6 @@ fi
 # create results directory
 scripts-create-path results/
 
-# setup
-sheet=inputs/sample-sheet.tsv
-release=inputs/release
-cat $release/../DNA/genome.bed | cols -t 0 1 2 0 > results/genome.bed
-
 # matrix
 scripts-send2err "=== Generating contact matrices ============="
 threads=2

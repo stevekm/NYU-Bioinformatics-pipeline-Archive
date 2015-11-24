@@ -8,4 +8,5 @@ module load bedtools/2.22.0
 module load java/1.7
 module load picard-tools
 
+set sheet = inputs/sample-sheet.tsv
 

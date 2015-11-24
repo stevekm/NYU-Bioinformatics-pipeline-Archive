@@ -6,9 +6,10 @@ peaks
 peaktable
 
 matrices
+matrices2
 
 pca
 
-peakdiff
+heatmaps
 
-#heatmaps
+peakdiff

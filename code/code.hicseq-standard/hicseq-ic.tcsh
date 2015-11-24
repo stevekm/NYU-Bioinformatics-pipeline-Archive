@@ -18,12 +18,15 @@ set sample = $4
 # run parameter script
 source $params
 
+# read variables from input branch
+source ./code/code.main/scripts-read-job-vars $branch/$sample "genome genome_dir enzyme bin_size"
+
 # create path
 scripts-create-path $outdir/
 
 # run iteractive correction
-set x = `scripts-create-temp`
-set y = `scripts-create-temp`
+set x = `scripts-create-temp $outdir`
+set y = `scripts-create-temp $outdir`
 set inpdir = $branch/$sample
 foreach mat (`cd $inpdir; ls -1 matrix.*.tsv | grep -vw 'chrM'`)
   scripts-send2err "Processing $mat..."
@@ -35,4 +38,8 @@ end
 
 # cleanup
 rm -f $x $y
+
+# save variables
+set >! $outdir/job.vars.tsv
+
 
