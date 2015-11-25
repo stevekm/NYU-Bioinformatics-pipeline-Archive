@@ -17,7 +17,7 @@ scripts-create-path results/
 
 # filter
 scripts-send2err "=== Aligning reads ============="
-threads=8
+threads=16
 scripts-master-loop.sh $threads by-sample ./code/hicseq-align.tcsh results/align "params/params.*.tcsh" inputs/fastq
 
 

@@ -20,7 +20,7 @@ set sample = $4
 send2err "Setting parameters..."
 source $params
 if (! $?NSLOTS) then
-  set threads = 8
+  set threads = 16
 else
   set threads = $NSLOTS
 endif
@@ -58,7 +58,7 @@ endif
 
 
 # save variables
-set >! $out/obj.params.tsv
+set >! $out/job.vars.tsv
 
 
 
