@@ -11,7 +11,7 @@ if ($bin_size >= 1000000) then
   set zone_size = 0
 else
   set algorithm = fused2Dzone_flsa
-  set zone_size = `echo 4000000/$bin_size | bc`        # number of bins
+  set zone_size = `echo 2500000/$bin_size | bc`        # number of bins
 endif
 set skip_dist = 0
 set split_size = 100
