@@ -1,6 +1,7 @@
 align
 
 filter
+filter-stats
 
 matrix.filtered
 
@@ -9,3 +10,5 @@ matrix.scaled
 matrix.ic
 
 matrix.estimate
+
+annotations

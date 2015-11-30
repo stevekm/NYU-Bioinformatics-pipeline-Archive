@@ -34,7 +34,7 @@ foreach mat (`cd $inpdir; ls -1 matrix.*.tsv | grep -vw 'chrM'`)
   foreach g ($gamma)
     set outmat = `echo $mat | sed 's/.tsv$/'".gamma=$g.RData/"`
     set jpref = $outdir/job.$outmat
-    set jid = `scripts-qsub-run $jpref 1 40 ./code/hic_matrix.r estimate -v -o $outdir/$outmat --ignored-loci=$outdir/ignored_loci.txt --gamma=$g $hic_params $inpdir/$mat`
+    set jid = `scripts-qsub-run $jpref 1 40 Rscript ./code/hic-matrix.r estimate -v -o $outdir/$outmat --ignored-loci=$outdir/ignored_loci.txt --gamma=$g $hic_params $inpdir/$mat`
     scripts-qsub-wait $jid
     set t = `scripts-create-temp $outdir`
     tail $jpref.out >! $t

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ##
-## USAGE: scripts-master-loop-grouped.sh THREADS METHOD SCRIPT OUTDIR-PREFIX PARAM-SCRIPTS INPUT-DIR(S)
+## USAGE: scripts-master-loop-grouped.sh RESOURCES METHOD SCRIPT OUTDIR-PREFIX PARAM-SCRIPTS INPUT-DIR(S)
 ##
-##   THREADS         number of threads
+##   RESOURCES       comma-separated threads and memory, e.g. 5-10,20G
 ##   METHOD          script will be run using one of these methods: by-object, by-sample, by-group, by-branch 
 ##   SCRIPT          script to be run for each combination of parameters and input branch, e.g. chipseq-peaks.tcsh
 ##   PARAM-SCRIPTS   array of parameter scripts
@@ -15,7 +15,7 @@ if (( ($# < 6) || ($# > 6) )); then
   exit
 fi
 
-threads=$1
+resources=$1
 method=$2
 operation=$3
 outpref=$4
@@ -61,7 +61,7 @@ for inpdir in ${inpdirs[*]}; do
         objects=( $(cd $inpdir/$branch; ls -1 */job.sh | sed 's/\/job.sh$//') )
         for obj in ${objects[*]}; do
           outdir=$outpref.$pname/$branch/$obj
-          jid+=( $(scripts-qsub-wrapper $threads $operation $outdir $p $inpdir/$branch $obj) )
+          jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch $obj) )
         done
 
       elif [ $method == "by-sample" ]; then
@@ -70,7 +70,7 @@ for inpdir in ${inpdirs[*]}; do
         #
         for s in ${samples[*]}; do
           outdir=$outpref.$pname/$branch/$s
-          jid+=( $(scripts-qsub-wrapper $threads $operation $outdir $p $inpdir/$branch $s) )
+          jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch $s) )
         done
 
       elif [ $method == "by-group" ]; then
@@ -80,7 +80,7 @@ for inpdir in ${inpdirs[*]}; do
         for g in ${groups[*]}; do
           outdir=$outpref.$pname/$branch/$g
           gsamples=( $(cat $sheet | grep -v '^#' | cut -f1,2 | tr '|' ' ' | key_expand | awk -v g=$g '$2==g' | cut -f1) )
-          jid+=( $(scripts-qsub-wrapper $threads $operation $outdir $p $inpdir/$branch "${gsamples[*]}") )
+          jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch "${gsamples[*]}") )
         done
       
       elif [ $method == "by-branch" ]; then
@@ -88,7 +88,7 @@ for inpdir in ${inpdirs[*]}; do
         # no looping necessary
         #
         outdir=$outpref.$pname/$branch
-        jid+=( $(scripts-qsub-wrapper $threads $operation $outdir $p $inpdir/$branch) )
+        jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch) )
 
       else
         #

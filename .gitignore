@@ -1,9 +1,10 @@
-*.fastq
 .DS_Store
 *.pdf
 *.fastq.gz
 *.fastq
 *.bam
+*.o
+*.so
 analyses/*
 results
 .nfs*

@@ -28,7 +28,7 @@ set genome_dir = inputs/genomes/$genome
 scripts-create-path $outdir/
 
 # filter
-samtools view $branch/$sample/alignments.bam | gtools_hic filter -v -E $genome_dir/$enzyme.fragments.bed $filter_params | gzip >! $outdir/filtered.reg.gz
+samtools view $branch/$sample/alignments.bam | gtools_hic filter -v -E $genome_dir/$enzyme.fragments.bed --stats $outdir/stats.tsv $filter_params | gzip >! $outdir/filtered.reg.gz
 
 # save variables
 set >! $outdir/job.vars.tsv
