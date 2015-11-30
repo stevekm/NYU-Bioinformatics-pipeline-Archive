@@ -2,7 +2,7 @@
 #$ -S /bin/tcsh
 
 ##
-## USAGE: scripts-qsub-wrapper N-THREADS SCRIPT-PATH OUTPUT-DIR ARGS ...
+## USAGE: scripts-qsub-wrapper THREADS[,MEMORY] SCRIPT-PATH OUTPUT-DIR ARGS ...
 ##
 
 if ($#argv < 3) then
@@ -10,11 +10,14 @@ if ($#argv < 3) then
   exit
 endif
 
-set nthreads = $1
+set resources = $1
 set prog = `which $2`
 set out = $3
 shift
 shift
+
+set nthreads = `echo $resources, | cut -d',' -f1`
+set mem = `echo $resources, | cut -d',' -f2`
 
 if (! -e $out) then
   set uptodate = false
@@ -29,7 +32,11 @@ if ($uptodate == false) then
   scripts-create-path $out/ 
   set pref = $out/job
   scripts-print-cmdline $prog $argv:q >! $pref.sh
-  qsub -cwd -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id
+  if ("$mem" == "") then
+    qsub -cwd -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id
+  else
+    qsub -cwd -l mem_free=$mem -l h_vmem=$mem -l mem_token=$mem -o :$pref.out -e :$pref.err -pe threaded $nthreads ./$pref.sh >! $pref.id
+  endif  
   cat $pref.id | cut -d' ' -f3                                                                 # TODO: need a general method to obtain job id
 else 
   scripts-send2err "[scripts-qsub-wrapper] Directory \'$out\' exists, skipping..."             # TODO: change this message to up-to-date when implemented

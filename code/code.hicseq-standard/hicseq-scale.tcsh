@@ -33,7 +33,7 @@ set features = $genome_dir/$enzyme.w=${res}kb.features.txt
 # run matrix scaling/normalizing operation
 foreach mat (`cd $inpdir; ls -1 matrix.*.tsv | grep -vw 'chrM'`)
   scripts-send2err "Processing $mat [enzyme = $enzyme\; features = $features\; n_reads = $n_reads]..."
-  ./code/hic_matrix.r normalize -v -o $outdir/$mat --n-reads=$n_reads --ignored-loci=$inpdir/ignored_loci.txt --features=$features $inpdir/$mat
+  Rscript ./code/hic-matrix.r normalize -v -o $outdir/$mat --n-reads=$n_reads --ignored-loci=$inpdir/ignored_loci.txt --features=$features $inpdir/$mat
 end
 
 # save variables
