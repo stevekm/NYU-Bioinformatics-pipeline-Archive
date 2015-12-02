@@ -11,7 +11,7 @@ endif
 
 set prefix = __
 rm -f ${prefix}*
-set f = index.txt
+set f = pipeline/index.txt
 set n = `cat $f | wc -l`
 set k = 1
 set head1 = 1
@@ -26,7 +26,7 @@ while ($k <= $n)
       set out = __${head1str}${head2str}-$folder
       echo "$out <- $folder"
       if (! -e $out) then
-        ln -s $folder $out
+        ln -s pipeline/$folder $out
       else
         scripts-send2err "Warning: symbolic link $out already exists, skipping..."
       endif  

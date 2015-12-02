@@ -37,6 +37,9 @@ jid=()
 #
 for inpdir in ${inpdirs[*]}; do
 
+  # get prefix of inpdir
+  inp=$(echo $inpdir/ | sed 's/.*\/results\///' | sed 's/^inputs\/.*$//')        # TODO: this is an ad hoc solution
+  
   # determine input branches
   branches=( $(cd $inpdir; find . -name 'job.sh' | sed 's/\/job.sh$//' | sed 's/\/[^/]\+$//' | sed 's/^\.\///' | sort -u) )
   if [ ${#branches[*]} == 0 ]; then
@@ -53,14 +56,16 @@ for inpdir in ${inpdirs[*]}; do
     # loop over all branches of input tree (one level before the leaves)
     #
     for branch in ${branches[*]}; do
-
+      # combine inpdir prefix and branch into output branch
+      outbranch=$inp$branch
+      
       if [ $method == "by-object" ]; then
         #
         # loop over all objects in the branch
         #
         objects=( $(cd $inpdir/$branch; ls -1 */job.sh | sed 's/\/job.sh$//') )
         for obj in ${objects[*]}; do
-          outdir=$outpref.$pname/$branch/$obj
+          outdir=$outpref.$pname/$outbranch/$obj
           jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch $obj) )
         done
 
@@ -69,7 +74,7 @@ for inpdir in ${inpdirs[*]}; do
         # loop over all samples
         #
         for s in ${samples[*]}; do
-          outdir=$outpref.$pname/$branch/$s
+          outdir=$outpref.$pname/$outbranch/$s
           jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch $s) )
         done
 
@@ -78,7 +83,7 @@ for inpdir in ${inpdirs[*]}; do
         # loop over all groups
         #
         for g in ${groups[*]}; do
-          outdir=$outpref.$pname/$branch/$g
+          outdir=$outpref.$pname/$outbranch/$g
           gsamples=( $(cat $sheet | grep -v '^#' | cut -f1,2 | tr '|' ' ' | key_expand | awk -v g=$g '$2==g' | cut -f1) )
           jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch "${gsamples[*]}") )
         done
@@ -87,7 +92,7 @@ for inpdir in ${inpdirs[*]}; do
         #
         # no looping necessary
         #
-        outdir=$outpref.$pname/$branch
+        outdir=$outpref.$pname/$outbranch
         jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch) )
 
       else

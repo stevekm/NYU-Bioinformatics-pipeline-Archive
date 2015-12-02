@@ -19,7 +19,7 @@ scripts-create-path results/
 
 # matrix
 scripts-send2err "=== Generating contact matrices ============="
-threads=2
-scripts-master-loop.sh $threads by-sample ./code/hicseq-matrix.tcsh results/matrix_filtered "params/params.*.tcsh" filter/results
+threads=2,20G
+scripts-master-loop.sh $threads by-sample ./code/hicseq-matrix.tcsh results/matrix-filtered "params/params.*.tcsh" filter/results
 
 

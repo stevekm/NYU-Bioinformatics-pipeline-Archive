@@ -2,18 +2,19 @@
 source ./code/code.main/custom-tcshrc         # customize shell environment
 
 ##
-## USAGE: pipeline-install-step OUT-DIRECTORY INP-DIRECTORIES PARAM-SCRIPTS WRAPPER-SCRIPTS
+## USAGE: pipeline-install-step OUT-DIRECTORY INP-DIRECTORIES GROUP-METHOD PARAM-SCRIPTS WRAPPER-SCRIPTS
 ##
 
-if ($#argv != 4) then
+if ($#argv < 3) then
   grep '^##' $0
   exit
 endif
 
 set outdir = $1
 set inpdirs = ($2)
-set params = ($3)
-set wrappers = ($4)
+set group_method = $3
+set params = ($4)
+set wrappers = ($5)
 
 if (-e $outdir) then
   scripts-send2err "Error: specified output directory already exists."
@@ -34,11 +35,11 @@ end
 mkdir params
 cd ..
 
-cp $params $outdir/params/
-cp $wrappers $outdir/code/
+if ("$params" != "") cp $params $outdir/params/
+if ("$wrappers" != "") cp $wrappers $outdir/code/
 
 set inpresults = `echo $inpdirs | tr ' ' '\n' | sed 's/$/\\\/results/'`
-cat code/run-template.sh | sed "s/%%op%%/$outdir/g" | sed 's/%%threads%%/1/g' | sed 's/%%method%%/by-branch/' | sed "s/%%inpresults%%/$inpresults/g" >! code/run-$outdir.sh
+cat code/run-template.sh | sed "s/%%op%%/$outdir/g" | sed 's/%%threads%%/1/g' | sed "s/%%method%%/$group_method/" | sed "s/%%inpresults%%/$inpresults/g" >! code/run-$outdir.sh
 chmod +x code/run-$outdir.sh
 
 
