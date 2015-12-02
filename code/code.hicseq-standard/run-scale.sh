@@ -19,7 +19,7 @@ scripts-create-path results/
 
 # matrix
 scripts-send2err "=== Generating scaled matrices ============="
-threads=1
-scripts-master-loop.sh $threads by-object ./code/hicseq-scale.tcsh results/matrix_scaled "params/params.*.tcsh" matrix.filtered/results
+threads=1,40G
+scripts-master-loop.sh $threads by-object ./code/hicseq-scale.tcsh results/matrix-scaled "params/params.*.tcsh" matrix-filtered/results
 
 

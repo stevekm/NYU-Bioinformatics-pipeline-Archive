@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## USAGE: run-matrix.sh
+## USAGE: run-ic.sh
 ##
 
 # shell settings
@@ -19,7 +19,8 @@ scripts-create-path results/
 
 # matrix
 scripts-send2err "=== Generating corrected matrix ============="
-threads=1
-scripts-master-loop.sh $threads by-object ./code/hicseq-ic.tcsh results/matrix_ic "params/params.*.tcsh" matrix.filtered/results
+resources=1,80G
+inpdirs=$(ls -1d matrix-filtered/results/* | grep -v '\.maxd_')                                                             # do not run IC on distance-restricted matrices
+scripts-master-loop.sh $resources by-object ./code/hicseq-ic.tcsh results/matrix-ic "params/params.*.tcsh" "$inpdirs"
 
 

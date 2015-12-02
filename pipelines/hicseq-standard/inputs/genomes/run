@@ -19,5 +19,6 @@ cp genome/DNA/features/*.effective.reg .
 cp genome/DNA/features/*.gc.reg .
 cp genome/DNA/features/*.mappability.reg .
 
+cat genome/ENSEMBL_69/gene.bed | genomic_regions reg | sed 's/.*|//' | genomic_regions bed | cut -f-6 | genomic_regions split >! gene.bed
 
 

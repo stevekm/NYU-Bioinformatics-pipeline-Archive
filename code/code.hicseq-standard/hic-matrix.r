@@ -865,7 +865,7 @@ op_normalize <- function(cmdline_args)
   y = x/(efflen2/1000)/(n_reads/1e9)
   y[(efflen2<opt$'min-efflen'^2)|(mappability2<opt$'min-mappability'^2)] = NA         # regions with low effective length and/or low mappability will be considered as missing values
 
-  # set ingored loci rows/columns to zero
+  # set ignored loci rows/columns to zero
   ignored_rows = integer(0)
   ignored_cols = integer(0)
   if (opt$'ignored-loci'!="") {
@@ -873,8 +873,8 @@ op_normalize <- function(cmdline_args)
     ignored_cols = sort(which(!is.na(match(colnames(x),as.vector(t(read.table(opt$'ignored-loci',check.names=F)))))))
     if (opt$verbose) { write(paste('Number of rows set to zero in input matrix (ignored loci) = ',length(ignored_rows),sep=''),stderr()); }
     if (opt$verbose) { write(paste('Number of columns set to zero in input matrix (ignored loci) = ',length(ignored_cols),sep=''),stderr()); }
-    x[ignored_rows,] = 0          # ignored bins are set to zero!
-    x[,ignored_cols] = 0
+    y[ignored_rows,] = 0          # ignored bins are set to zero!
+    y[,ignored_cols] = 0
   }
 
   if (opt$dist>0) {
@@ -1397,7 +1397,7 @@ Input: \
     if (ext=='RData') {
       est = new.env()
       load(files[f],est)
-      if ((est$opt$preprocess!='zscore')&&(est$opt$preprocess!='dist')&&(est$opt$preprocess!='distlog2')) { write("Error: estimation preprocessing should be dist or distlog2 for this operation!",stderr()); quit(save='no') }
+      #if ((est$opt$preprocess!='zscore')&&(est$opt$preprocess!='dist')&&(est$opt$preprocess!='distlog2')) { write("Error: estimation preprocessing should be dist or distlog2 for this operation!",stderr()); quit(save='no') }
       if ((opt$'lambda-id'<1)||(opt$'lambda-id'>length(est$lambdas))) { write("Error: lambda id out of bounds!",stderr()); quit(save='no') }
       x_raw[[f]] = est$x                                                                                            # raw matrix
       x_norm[[f]] = est$solObj[opt$'lambda-id',,]                                                                   # estimated distance-normalized matrix
@@ -1427,7 +1427,7 @@ Input: \
   # Generate table
   if (opt$verbose) write("Generating table...",stderr())
   if (full_matrix[1]==TRUE) {                                    # get loci labels
-    table = cbind(melt(x_raw[[1]]))[,1:2]
+    table = cbind(melt(x_raw[[1]]))[i_selected,1:2]
   } else {
     rnames = rownames(x_raw[[1]])
     N = length(rnames)
@@ -1458,7 +1458,7 @@ Input: \
   colors = c('red','green','blue','magenta','black','purple','yellow')
   colors = as.vector(replicate(length(counts)%/%length(colors)+1,colors))[1:length(counts)]
   x = 1:length(counts[[1]])*bin_size/1000
-  ylim = c(min(sapply(counts,min)),max(sapply(counts,max)))
+  ylim = c(min(sapply(counts,function(v) min(v[v>0]))),max(sapply(counts,max)))
   plot(x,counts[[1]],type='l',col='red',log="xy",xlab='distance (kb)',ylab='Scaled Hi-C count (RPK2B)',main='Hi-C scaled count per distance',ylim=ylim)
   for (k in 1:length(counts)) lines(x,counts[[k]],col=colors[k])
   legend('bottomleft',sample_labels,cex=0.75,pch=16,col=colors,inset=0.05);

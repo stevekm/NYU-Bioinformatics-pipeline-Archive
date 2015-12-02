@@ -25,7 +25,7 @@ source $params
 scripts-create-path $outdir/
 
 # setup
-cat $genome_dir/genome.bed | genomic_regions win -s $bin_size -d $bin_size | genomic_overlaps subset -i $genome_dir/centrotelo.bed | genomic_regions shiftp -5p 1 -3p 0 | sed 's/\t/:/' | sed 's/\t/-/' >! $outdir/ignored_loci.txt
+./code/create-ignored-loci.tcsh $genome_dir $bin_size >! $outdir/ignored_loci.txt
 
 # run estimation
 set inpdir = $branch/$sample

@@ -2,7 +2,7 @@
 source ./code/code.main/custom-tcshrc         # customize shell environment
 
 ##
-## USAGE: scripts-read-job-vars INPUT-DIR VARIABLE-NAMES
+## USAGE: scripts-read-job-vars INPUT-DIRS VARIABLE-NAMES
 ##
 
 # process command-line inputs
@@ -11,12 +11,18 @@ if ($#argv != 2) then
   exit
 endif
 
-set inpdir = $1
+set inpdirs = ($1)
 set vars = ($2)
 
 # read variables
 foreach name ($vars)
-  set value = `cat $inpdir/job.vars.tsv | grep "^$name	" | cut -f2`
+  set value = `cat $inpdirs[1]/job.vars.tsv | grep "^$name	" | cut -f2`
+  foreach inpdir ($inpdirs)
+    set value2 = `cat $inpdir/job.vars.tsv | grep "^$name	" | cut -f2`
+    if ("$value2" != "$value") then
+      scripts-send2err "Error: [scripts-read-job-vars] values do not match across input samples."
+    endif
+  end
   scripts-send2err "$name = $value"
   set $name = $value
 end

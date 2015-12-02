@@ -14,8 +14,9 @@ scripts-create-path results/
 
 # filter
 scripts-send2err "=== Running annotations ============="
-threads=1
+resources=1,10G
 method=by-object
-scripts-master-loop.sh $threads $method ./code/hicseq-annotations.tcsh results/annotations "params/params.*.tcsh" "matrix.filtered/results/matrix_filtered.res_40kb/."
+inpdirs=$(find matrix-filtered/results/ -name '*res_10kb*')                                                                           # run only at 10kb resolution
+scripts-master-loop.sh $resources $method ./code/hicseq-annotations.tcsh results/annotations "params/params.*.tcsh" "$inpdirs"
 
 

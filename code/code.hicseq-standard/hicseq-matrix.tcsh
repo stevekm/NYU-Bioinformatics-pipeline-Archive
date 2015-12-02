@@ -16,18 +16,22 @@ set params = $2
 set branch = $3
 set samples = ($4)
 
+# sample paths
+set sample_paths = `echo "$branch\t$samples" | key_expand | tr '\t' '/'`
+
 # read variables from input branch
-source ./code/code.main/scripts-read-job-vars $branch/$samples[1] "genome genome_dir enzyme"                      # TODO: check consistency of these variables across samples
+source ./code/code.main/scripts-read-job-vars "$sample_paths" "genome genome_dir enzyme"
 
 # run parameter script
 scripts-send2err "Setting parameters..."
 source $params
+scripts-send2err "params = $matrix_params"
 
 # create path
 scripts-create-path $outdir/
 
 # setup
-cat $genome_dir/genome.bed | genomic_regions win -s $bin_size -d $bin_size | genomic_overlaps subset -i $genome_dir/centrotelo.bed | genomic_regions shiftp -5p 1 -3p 0 | sed 's/\t/:/' | sed 's/\t/-/' >! $outdir/ignored_loci.txt
+./code/create-ignored-loci.tcsh $genome_dir $bin_size >! $outdir/ignored_loci.txt
 
 # generate matrix
 set filtered_reads = `echo $samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/filtered.reg.gz"}'`
