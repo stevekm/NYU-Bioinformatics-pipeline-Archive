@@ -614,7 +614,7 @@ op_estimate <- function(cmdline_args)
   # ##########################################
   # estimation algorithm = fused2D/FLSA
   # ##########################################
-  } else if (algorithm == 'fused2d_flsa') {
+  } else if ((algorithm=='fused2d_flsa')||((algorithm=='fused2dzone_flsa')&&(is_full_matrix(x)==FALSE))) {
     if (opt$verbose) { write('Estimating contact matrix...',stderr()); }
     solObj = flsa(y,connListObj=NULL,lambda1=gammas,lambda2=lambdas,verbose=opt$'flsa-verbose',thr=err_threshold,splitCheckSize=splitCheckSize);
     if (is.null(lambdas)==FALSE) { if ((length(dim(solObj))==4)&(dim(solObj)[1]==1)) { solObj = solObj[1,,,]; } }

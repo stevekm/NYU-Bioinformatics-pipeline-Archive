@@ -19,8 +19,8 @@ scripts-create-path results/
 
 # matrix
 scripts-send2err "=== Estimating matrix using fused lasso ============="
-resources=1,20G
-op=estimate
-scripts-master-loop.sh $resources by-object ./code/hicseq-$op.tcsh results/matrix-estimated "params/params.*.tcsh" "matrix-*/results"
-
+resources=1
+inpdirs=$(find matrix-*/ -name 'matrix-*.res_*kb')
+scripts-master-loop.sh $resources by-object ./code/hicseq-estimate.tcsh results/matrix-estimated "params/params.prep_log2.fused1Dsymm.tcsh" "$inpdirs"
+#scripts-master-loop.sh $resources by-object ./code/hicseq-estimate.tcsh results/matrix-estimated "params/params.*.tcsh" "matrix-*/results"
 

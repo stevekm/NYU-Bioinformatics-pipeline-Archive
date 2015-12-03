@@ -30,11 +30,15 @@ scripts-create-path $outdir/
 # run estimation
 set inpdir = $branch/$sample
 foreach mat (`cd $inpdir; ls -1 matrix.*.tsv | grep -vw 'chrM'`)
-  send2err "Processing input matrix $mat..."
+  scripts-send2err "Processing input matrix $mat..."
+  set n_rows = `cat $inpdir/$mat | wc -l`
+  set n_cols = `head -1 $inpdir/$mat | tr '\t' '\n' | wc -l`
+  set mem = `echo "500*$n_rows*$n_cols/1000000000+1" | bc`
+  scripts-send2err "requested memory = $mem"
   foreach g ($gamma)
     set outmat = `echo $mat | sed 's/.tsv$/'".gamma=$g.RData/"`
     set jpref = $outdir/job.$outmat
-    set jid = `scripts-qsub-run $jpref 1 40 Rscript ./code/hic-matrix.r estimate -v -o $outdir/$outmat --ignored-loci=$outdir/ignored_loci.txt --gamma=$g $hic_params $inpdir/$mat`
+    set jid = `scripts-qsub-run $jpref 1 $mem Rscript ./code/hic-matrix.r estimate -v -o $outdir/$outmat --ignored-loci=$outdir/ignored_loci.txt --gamma=$g $hic_params $inpdir/$mat`
     scripts-qsub-wait $jid
     set t = `scripts-create-temp $outdir`
     tail $jpref.out >! $t
