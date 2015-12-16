@@ -12,12 +12,14 @@ shopt -s extglob  #Enables extglob
 #
 ##
 ### COPY THE BIG WIGS
-if [ -d ${1}*/peaks/results ]; then
+if [[ -d ${1}*/peaks/results ]]; then
 # make dir
 mkdir -p $2alignment/bigwigs
 
 # find the bigwig files
-BIG_WIGS=$(ls ${1}*/alignments/results/*/*.bw)
+# BIG_WIGS=$(ls ${1}*/alignments/results/*/*.bw)
+BIG_WIGS=$(find ${1}*/alignments/results -type f -name "*.bw")
+
 for i in $BIG_WIGS; do
   # get the sample name from its dir name
   q=$(basename $(dirname $i ) );
@@ -38,7 +40,7 @@ fi
 #
 ##
 ### COPY THE PEAKS
-if [ -d ${1}*/peaks/results ]; then
+if [[ -d ${1}*/peaks/results ]]; then
 # make the dirs
 mkdir -p $2peaks/{narrow,broad}
 
