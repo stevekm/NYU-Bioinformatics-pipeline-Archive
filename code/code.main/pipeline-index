@@ -1,4 +1,5 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
 ## USAGE: pipeline-index 
@@ -17,7 +18,7 @@ set k = 1
 set head1 = 1
 set head2 = 97   # ASCII code for 'a'
 while ($k <= $n)
-  set inp = `cat $f | rows -1 $k`
+  set inp = `cat $f | tools-rows -1 $k`
   if ($inp != '') then
     if (`echo $inp | cut -c1` == '#') goto skip
     foreach folder ($inp)

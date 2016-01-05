@@ -1,5 +1,7 @@
 #!/bin/tcsh
 
 setenv LC_ALL "C"
-set path = ( ./code/code.main /ifs/home/at570/disk1/Resources/Bin/linux $path )
+set path = `echo $path | tr ' ' '\n' | grep -v '/at570/'`
+set path = ( ./code/code.main $path )
+
 

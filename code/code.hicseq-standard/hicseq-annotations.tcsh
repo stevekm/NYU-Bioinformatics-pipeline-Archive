@@ -2,7 +2,7 @@
 source ./code/code.main/custom-tcshrc    # customize shell environment
 
 ##
-## USAGE: hicseq-estimate.tcsh OUTPUT-DIR PARAM-SCRIPT MATRIX-BRANCH SAMPLE
+## USAGE: hicseq-estimate.tcsh OUTPUT-DIR PARAM-SCRIPT MATRIX-BRANCH OBJECT(S)
 ##
 
 if ($#argv != 4) then
@@ -13,10 +13,17 @@ endif
 set outdir = $1
 set params = $2
 set branch = $3
-set sample = $4          # TODO: allow multiple samples, so that this operation can be run by-group; BUT, genomes must match!
+set objects = ($4)          # TODO: allow multiple objects (i.e. samples), so that this operation can be run by-group; BUT, genomes must match!
+
+# test number of input objects
+set object = $objects[1]
+if ($#objects != 1) then
+  scripts-send2err "Error: this operation allows only one input object!"
+  exit 1
+endif
 
 # read variables from input branch
-source ./code/code.main/scripts-read-job-vars $branch/$sample "genome genome_dir enzyme bin_size"
+source ./code/code.main/scripts-read-job-vars $branch "$objects" "genome genome_dir bin_size"
 
 # run parameter script
 source $params
@@ -24,20 +31,22 @@ source $params
 # create path
 scripts-create-path $outdir/
 
-# create table of interactions for each chromosome
-set inpdir = $branch/$sample
-set filter_branch = ../filter/results/`echo $branch | sed 's/.*\/\(filter\.\)/\1/'`
-set n_reads = `cat $filter_branch/$sample/stats.tsv | grep '^ds-accepted-intra	' | cut -f2`
-foreach mat (`cd $inpdir; ls -1 matrix.*.tsv matrix.*.RData | grep chr19`)
-  send2err "Processing input matrix $inpdir/$mat..."
-  set outmatdir = `echo $mat | sed 's/\.tsv$//' | sed 's/\.RData$//'`
-  Rscript ./code/hic-matrix.r loops -v -o $outdir/$outmatdir -L $sample --n-reads=$n_reads $loop_params $inpdir/$mat
-end
+# -------------------------------------
+# -----  MAIN CODE BELOW --------------
+# -------------------------------------
 
 # annotate
-./code/hicseq-annotate-tables.tcsh $outdir/annotations "$outdir/matrix.*/loops.tsv" $genes_bed "$loci_bed"
+set inpdir = $branch/$object
+./code/hicseq-annotate-tables.tcsh $outdir "$inpdir/matrix.*/loops.tsv" $genes_bed "$loci_bed"
+
+# -------------------------------------
+# -----  MAIN CODE ABOVE --------------
+# -------------------------------------
 
 # save variables
-set >! $outdir/job.vars.tsv
+source ./code/code.main/scripts-save-job-vars
+
+# done
+scripts-send2err "Done."
 
 

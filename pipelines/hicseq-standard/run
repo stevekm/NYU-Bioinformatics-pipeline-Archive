@@ -1,5 +1,6 @@
 #!/bin/tcsh
 #$ -S /bin/tcsh
+source ./code/code.main/custom-tcshrc     # customized shell environment
 
 ##
 ## USAGE: run
@@ -9,9 +10,6 @@ if ($#argv != 0) then
   grep '^##' $0
   exit
 endif
-
-# shell settings
-source ./code/code.main/custom-tcshrc
 
 # validate sample sheet
 scripts-send2err "Validating sample sheet..."
@@ -24,14 +22,23 @@ endif
 # run pipeline
 scripts-send2err "PIPELINE STARTING: `date`"
 foreach d (__*)
-  ( cd $d; ./run )
+  set p = `pwd`
+  
+  # enter directory and run
+  cd $d
+  ./run
+  
+  # check for errors
+  scripts-send2err "Checking job log files for errors..."
+  find . -name 'job.*' -print0 | xargs -0 grep -iE 'usage|error|segmentation|not found|join.*sort|no such file|syntax|terminate' >&! error.log
+  if (`cat error.log | wc -l` > 0) then
+    scripts-send2err "Errors encountered, aborting!"
+    exit 1
+  endif
+  
+  # go back to main directory
+  cd $p
 end
 scripts-send2err "PIPELINE COMPLETED: `date`"
 
-# check for errors
-scripts-send2err ""
-scripts-send2err "Errors below, if any: "
-./code/code.main/pipeline-errors
-scripts-send2err ""
-scripts-send2err "Done."
 

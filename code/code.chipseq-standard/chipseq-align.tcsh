@@ -1,31 +1,28 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc         # customize shell environment
 
 ##
-## USAGE #1: chipseq-align.tcsh OUTPUT-DIR PARAMETER-SCRIPT FASTQ-R1 [FASTQ-R2]
-##
-## USAGE #2: chipseq-align.tcsh OUTPUT-DIR PARAMETER-SCRIPT BAM-FILE
+## USAGE: chipseq-align.tcsh OUTPUT-DIR PARAMETER-SCRIPT FASTQ-BRANCH SAMPLE
 ##
 
-# shell settings (must be included in all scripts)
-source ./code/code.main/custom-tcshrc
-
-if ($#argv < 3) then
+# process command-line inputs
+if ($#argv != 4) then
   grep '^##' $0
   exit
 endif
 
-set out_dir = $1
+set outdir = $1
 set params = $2
-if (`echo $3 | grep -c '\.bam$'` == 1) then
-  set BAM = $3
-  set R1 = 
-  set R2 =
-else
-  set BAM = 
-  set R1 = $3
-  set R2 = $4
+set branch = $3
+set objects = ($4)
+
+# test number of input objects
+set object = $objects[1]
+if ($#objects != 1) then
+  scripts-send2err "Error: this operation allows only one input object!"
+  exit 1
 endif
-    
+
 # set parameters
 source $params
 if (! $?NSLOTS) then
@@ -35,7 +32,27 @@ else
 endif
 
 # create path
-scripts-create-path $out_dir
+scripts-create-path $outdir/
+
+
+# -------------------------------------
+# -----  MAIN CODE BELOW --------------
+# -------------------------------------
+
+set genome_dir = inputs/genomes/$genome
+
+set BAM = 
+set R1 = `./code/read-sample-sheet.tcsh $sheet $object fastq-r1`
+set R2 = `./code/read-sample-sheet.tcsh $sheet $object fastq-r2 | grep -v '^NA$'`
+if ("$R1" != "") set R1 = `echo $R1 | tr ',' '\n' | awk -v d=$branch '{print d"/"$0}'`
+if ("$R2" != "") set R2 = `echo $R2 | tr ',' '\n' | awk -v d=$branch '{print d"/"$0}'`
+
+if (`echo $R1 | tr ' ' '\n' | grep -c '\.bam$'` == 1) then
+  scripts-send2err "Using bam files..."
+  set BAM = $R1
+  set R1 = 
+  set R2 =
+endif
 
 if ($R1 != '') then
   # run aligner
@@ -45,12 +62,11 @@ if ($R1 != '') then
   else
     set input = "-1 $R1 -2 $R2"
   endif
-  $aligner --threads $threads $align_params $input | samtools view -q $mapq -@ $threads -Sb1 - | samtools sort -m 10G -@ $threads - $out_dir/alignments_sorted
+  $aligner --threads $threads $align_params $input | samtools view -q $mapq -@ $threads -Sb1 - | samtools sort -m 10G -@ $threads - $outdir/alignments_sorted
 else
   scripts-send2err "Sorting alignments..."
-  samtools sort -m 10G -@ $threads $BAM $out_dir/alignments_sorted
+  samtools sort -m 10G -@ $threads $BAM $outdir/alignments_sorted
 endif
-
 
 # remove duplicate alignments
 scripts-send2err "Removing duplicates..."
@@ -63,12 +79,12 @@ java -Xms8G -Xmx16G -jar $picard_root/MarkDuplicates.jar \
  REMOVE_DUPLICATES=true \
  ASSUME_SORTED=false \
  CREATE_INDEX=false \
- METRICS_FILE=$out_dir/picard_metrics.txt \
- INPUT=$out_dir/alignments_sorted.bam \
- OUTPUT=$out_dir/alignments.bam
+ METRICS_FILE=$outdir/picard_metrics.txt \
+ INPUT=$outdir/alignments_sorted.bam \
+ OUTPUT=$outdir/alignments.bam
 
 # index
-samtools index $out_dir/alignments.bam
+samtools index $outdir/alignments.bam
 
 # stats
 scripts-send2err "Computing statistics..."
@@ -78,23 +94,33 @@ if ($R1 != '') then
 else
   set n_reads = `samtools view $BAM | wc -l`
 endif
-set n_aligned = `samtools view $out_dir/alignments_sorted.bam | wc -l`
-set n_unique = `samtools view $out_dir/alignments.bam | wc -l`
-echo "Total reads\t$n_reads" >! $out_dir/stats.tsv
-echo "Aligned reads\t$n_aligned" >> $out_dir/stats.tsv
-echo "De-duplicated alignments\t$n_unique" >> $out_dir/stats.tsv
+set n_aligned = `samtools view $outdir/alignments_sorted.bam | wc -l`
+set n_unique = `samtools view $outdir/alignments.bam | wc -l`
+echo "Total reads\t$n_reads" >! $outdir/stats.tsv
+echo "Aligned reads\t$n_aligned" >> $outdir/stats.tsv
+echo "De-duplicated alignments\t$n_unique" >> $outdir/stats.tsv
 
 # create bigwig
 scripts-send2err "Creating bigwig file..."
 set chr_sizes = `scripts-create-temp`
 set bedgraph = `scripts-create-temp`
-cat $release/genome.bed | awk '{print $1,$2,$3,$1}' | genomic_regions n >! $chr_sizes
+cat $genome_dir/genome.bed | awk '{print $1,$2,$3,$1}' | gtools-regions n >! $chr_sizes
 set scale = `echo 1000000/$n_unique | bc -l`
-genomeCoverageBed -ibam $out_dir/alignments.bam -scale $scale -bg -g $chr_sizes >! $bedgraph
-bedGraphToBigWig $bedgraph $chr_sizes $out_dir/track.bw
+genomeCoverageBed -ibam $outdir/alignments.bam -scale $scale -bg -g $chr_sizes >! $bedgraph
+bedGraphToBigWig $bedgraph $chr_sizes $outdir/track.bw
 rm -f $chr_sizes $bedgraph
 
+# cleanup
+rm -f $outdir/alignments_sorted.bam
+
+# -------------------------------------
+# -----  MAIN CODE ABOVE --------------
+# -------------------------------------
+
+
+# save variables
+source ./code/code.main/scripts-save-job-vars
+
 # done
-rm -f $out_dir/alignments_sorted.bam
 scripts-send2err "Done."
 

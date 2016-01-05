@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## USAGE: scripts-master-loop-grouped.sh RESOURCES METHOD SCRIPT OUTDIR-PREFIX PARAM-SCRIPTS INPUT-DIR(S)
+## USAGE: scripts-master-loop.sh RESOURCES METHOD SCRIPT OUTDIR-PREFIX PARAM-SCRIPTS INPUT-DIR(S)
 ##
 ##   RESOURCES       comma-separated threads and memory, e.g. 5-10,20G
 ##   METHOD          script will be run using one of these methods: by-object, by-sample, by-group, by-branch 
@@ -25,8 +25,9 @@ inpdirs=($6)             # TODO: check for output directory name conflicts!!
 
 # setup
 sheet=inputs/sample-sheet.tsv
-samples=( $(cat $sheet | grep -v '^#' | cut -f1) )
-groups=( $(cat $sheet | grep -v '^#' | cut -f2 | tr '|' '\n' | sort -u) )
+samples=( $(cat $sheet | sed '1d' | cut -f1) )
+group_column=$(cat $sheet | head -1 | tr '\t' '\n' | grep -n '^group$' | cut -d':' -f1)
+groups=( $(cat $sheet | sed '1d' | cut -f$group_column | tr '|' '\n' | sort -u) )
 
 # initialize
 jid=()
@@ -84,7 +85,7 @@ for inpdir in ${inpdirs[*]}; do
         #
         for g in ${groups[*]}; do
           outdir=$outpref.$pname/$outbranch/$g
-          gsamples=( $(cat $sheet | grep -v '^#' | cut -f1,2 | tr '|' ' ' | key_expand | awk -v g=$g '$2==g' | cut -f1) )
+          gsamples=( $(cat $sheet | sed '1d' | cut -f1,$group_column | tr '|' ' ' | tools-key-expand | awk -v g=$g '$2==g' | cut -f1) )
           jid+=( $(scripts-qsub-wrapper $resources $operation $outdir $p $inpdir/$branch "${gsamples[*]}") )
         done
       

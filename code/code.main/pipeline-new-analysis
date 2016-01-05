@@ -29,10 +29,13 @@ rm -f code
 if ($symlink == 'true') then
   ln -s $repo_code_dir/code.$pipeline_name code
 else
-  rsync -auv $repo_code_dir/ code.repo
+  rsync -auv --exclude=src $repo_code_dir/ code.repo
   ln -s code.repo/code.$pipeline_name code
 endif
 
+# create symbolic link to data repository (genomes, etc)
+rm -f data
+ln -s $pipeline_dir/data
 
 
 

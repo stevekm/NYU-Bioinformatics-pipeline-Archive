@@ -1,4 +1,5 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc    # customize shell environment
 
 ##
 ## USAGE: compute-hicnorm-features
@@ -18,11 +19,11 @@ foreach enzyme_info (NcoI:CCATGG HindIII:AAGCTT)
 
   foreach w ($BINSIZES)
     echo "-- processing w=$w..."
-    ( cat genome.bed | grep '^chr[0-9]' | cols -t 0 0 1 2 | sed 's/^chr//' | sort -n | cut -f2- ; cat genome.bed | grep chrX ) | genomic_regions win -s ${w}000 -d ${w}000 | genomic_regions reg | cols -t 1 1 | sed 's/ + /:/' | sed 's/ /-/' >! genome.w=${w}kb,d=${w}kb.reg
+    ( cat genome.bed | grep '^chr[0-9]' | tools-cols -t 0 0 1 2 | sed 's/^chr//' | sort -n | cut -f2- ; cat genome.bed | grep chrX ) | gtools-regions win -s ${w}000 -d ${w}000 | gtools-regions reg | tools-cols -t 1 1 | sed 's/ + /:/' | sed 's/ /-/' >! genome.w=${w}kb,d=${w}kb.reg
     set x = `make_temp_vec 3`
-    cat $enzyme.effective.reg | genomic_overlaps coverage -i genome.w=${w}kb,d=${w}kb.reg | sort >! $x[1]
-    cat genome.w=${w}kb,d=${w}kb.reg | genomic_overlaps overlap -i -label -t '|' $enzyme.gc.reg | cut -f1 | replace_with_tab '|' | mergeuniq -merge | vectors m -n 6 | sort >! $x[2]
-    cat genome.w=${w}kb,d=${w}kb.reg | genomic_overlaps overlap -i -label -t '|' $enzyme.mappability.reg | cut -f1 | replace_with_tab '|' | mergeuniq -merge | vectors m -n 6 | sort >! $x[3]
+    cat $enzyme.effective.reg | gtools-overlaps coverage -i genome.w=${w}kb,d=${w}kb.reg | sort >! $x[1]
+    cat genome.w=${w}kb,d=${w}kb.reg | gtools-overlaps overlap -i -label -t '|' $enzyme.gc.reg | cut -f1 | replace_with_tab '|' | tools-mergeuniq -merge | tools-vectors m -n 6 | sort >! $x[2]
+    cat genome.w=${w}kb,d=${w}kb.reg | gtools-overlaps overlap -i -label -t '|' $enzyme.mappability.reg | cut -f1 | replace_with_tab '|' | tools-mergeuniq -merge | tools-vectors m -n 6 | sort >! $x[3]
     joint -a1 -e0 -o 1.1 1.2 2.2 $x[1] $x[2] | joint -a1 -e0 -o 1.1 1.2 1.3 2.2 - $x[3] | sed 's/:/\t/' | sed 's/-/\t/' | sort -k1,1 -k2,2g | sed 's/\t/:/' | sed 's/\t/-/' >! $enzyme.w=${w}kb.features.txt
     rm -f $x
   end

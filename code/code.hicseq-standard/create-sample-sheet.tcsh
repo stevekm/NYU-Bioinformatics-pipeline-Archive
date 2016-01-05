@@ -1,13 +1,11 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc    # customize shell environment
 
 ##
 ## USAGE: create-sample-sheet.tcsh GENOME={hg19,mm10}
 ##
 ## FUNCTION: create sample sheet automatically from input files in fastq directory
 ##
-
-# shell settings
-source ./code/code.main/custom-tcshrc
 
 # process command-line inputs
 if ($#argv != 1) then
@@ -20,7 +18,7 @@ set genome = $1
 # create sample sheet
 set inpdir = fastq
 set sheet = sample-sheet.tsv
-echo "#SAMPLE-NAME\tGROUP-NAMES(S)\tFASTQ-R1-FILES\tFASTQ-R2-FILES\tGENOME\tENZYME" >! $sheet
+echo "sample group fastq-r1 fastq-r2 genome enzyme" | tr ' ' '\t' >! $sheet
 foreach sample (`cd $inpdir; ls -1d *`)
   scripts-send2err "Importing sample $sample..."
   set group = `echo $sample | cut -d'-' -f-2`
@@ -43,9 +41,9 @@ echo
 
 echo "Diagnostics: "
 echo "Field #1: "
-grep -v '^#' $sheet | cut -f1 | cut -d'-' -f1 | sort | uniq -c
+cat $sheet | scripts-skipn 1 | cut -f1 | cut -d'-' -f1 | sort | uniq -c
 echo "Field #2: "
-grep -v '^#' $sheet | cut -f1 | cut -d'-' -f2 | sort | uniq -c
+cat $sheet | scripts-skipn 1 | cut -f1 | cut -d'-' -f2 | sort | uniq -c
 echo "Field #3: "
-grep -v '^#' $sheet | cut -f1 | cut -d'-' -f3 | sort | uniq -c
+cat $sheet | scripts-skipn 1 | cut -f1 | cut -d'-' -f3 | sort | uniq -c
 

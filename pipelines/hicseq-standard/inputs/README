@@ -2,14 +2,16 @@
 ## REQUIRED INPUT FILES/DIRECTORIES
 #####################################
 
+* params/params.tcsh : load all tools and dependencies using "module load"
+
 * fastq/ : put all fastq[.gz] files here (symbolic links are accepted as well)
 
 * sample-sheet.tsv : tab-separated file with the following fields:
-1. SAMPLE-NAME
-2. GROUP-NAME(S)
-3. FASTQ-R1-FILE(S)
-4. FASTQ-R2-FILE(S)
-5. GENOME (e.g. hg19, mm10)
-6. ENZYME (e.g. HindIII, NcoI)
+1. sample (e.g. CUTLL1-NcoI-rep1)
+2. group (e.g. CUTLL1-NcoI)
+3. fastq-r1
+4. fastq-r2
+5. genome (e.g. hg19, mm10)
+6. enzyme (e.g. HindIII, NcoI)
 
 

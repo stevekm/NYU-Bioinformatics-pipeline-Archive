@@ -19,10 +19,10 @@ set peaks = ($2)
 scripts-create-path $out/
 
 # create common reference regions
-cat $peaks | scripts-sortbed | genomic_regions link | genomic_regions reg | cut -f2 | rows -number -pref PEAK_ >! $out/ref.reg
+cat $peaks | scripts-sortbed | gtools-regions link | gtools-regions reg | cut -f2 | tools-rows -number -pref PEAK_ >! $out/ref.reg
 
 # generate matrix
-gtools_threaded matrix -v -i -p 1 -nbins 1 --overlap-op value `echo $peaks | tr ' ' ','` $out/ref.reg >! $out/matrix.tsv
+gtools-threaded matrix -v -i -p 1 -nbins 1 --overlap-op value `echo $peaks | tr ' ' ','` $out/ref.reg >! $out/matrix.tsv
 
 # run PCA
 head -1 $out/matrix.tsv | tr '\t' '\n' | scripts-skipn 1 | cut -d'/' -f1 | cut -d'.' -f2 | tr '-' ':' | sed 's/:/-/' | sed 's/:/-/' >! $out/matrix.labels.txt

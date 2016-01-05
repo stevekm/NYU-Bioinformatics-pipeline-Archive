@@ -21,7 +21,7 @@ set b = $4     # 50000
 module load tabix/0.2.6
 
 # Create genome matrix
-cat $r | gunzip | gtools_hic bin -v --bin-size $b -g $g --matrix | gtools_hic convert >! $out/track.washu.tsv
+cat $r | gunzip | gtools-hic bin -v --bin-size $b -g $g --matrix | gtools-hic convert >! $out/track.washu.tsv
 
 # Compress and index
 bgzip $out/track.washu.tsv

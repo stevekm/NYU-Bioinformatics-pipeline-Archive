@@ -1,5 +1,6 @@
-#!/bin/tcsh
+#!/bin/bash
 
 export LC_ALL=C
-export PATH=./code/code.main:/ifs/home/at570/disk1/Resources/Bin/linux:$PATH
+export PATH=$(echo $(echo $PATH | tr ':' '\n' | grep -v '/at570/') | tr ' ' ':')
+export PATH=./code/code.main:$PATH
 

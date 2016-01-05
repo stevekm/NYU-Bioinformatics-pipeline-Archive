@@ -2,11 +2,17 @@
 ## REQUIRED INPUT FILES/DIRECTORIES
 #####################################
 
-* release/ : symbolic link to ENSEMBL release directory, e.g. ln -s Genomes/hg19/ENSEMBL_69 release
+* params/params.tcsh: script used to load all tools and dependencies using "module load"
 
-* fastq-or-alignments/ : put all fastq[.gz] and/or bam files here (symbolic links are accepted as well)
+* fastq/: put all fastq.gz or bam files here (symbolic links are accepted as well)
 
-* sample-sheet.tsv : tab-separated file with 4 fields (#SAMPLE-NAME <TAB> GROUPS <TAB> CONTROL-SAMPLE-NAME <TAB> FILE-NAMES); this can be generated automatically using the ./code/create-sample-sheet.tcsh script, but you need to add the corresponding input samples for each ChIP sample (this can be done easily in Excel)
-
-* comparisons.tsv : comparisons between pairs of samples for peakdiff; tab-separated file with 2 fields (#GROUP-NAME-1 <TAB> GROUP-NAME-2)
+* sample-sheet.tsv: 
+This file can be created automatically by ./code/create-sample-sheet.tcsh script and then edited manually if necessary. Has the following required fields:
+- sample (e.g. CUTLL1-DMSO-CTCF-rep1)
+- control (e.g. CUTLL1-DMSO-Input-rep1)
+- group (e.g. CUTLL1-DMSO-CTCF)
+- fastq-r1
+- fastq-r2
+- genome (e.g. hg19, mm10)
+- fragmentation-size
 
