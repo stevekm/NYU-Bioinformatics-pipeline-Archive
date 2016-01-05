@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+set >! $outdir/job.vars.tsv
+
+

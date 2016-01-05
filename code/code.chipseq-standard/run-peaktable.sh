@@ -1,11 +1,9 @@
 #!/bin/bash
+source ./code/code.main/custom-bashrc      # shell settings (must be included in all scripts)
 
 ##
 ## USAGE: run-peaktable.sh
 ##
-
-# shell settings (must be included in all scripts)
-source ./code/code.main/custom-bashrc
 
 # process command-line inputs
 if [ $# != 0 ]; then
@@ -18,8 +16,7 @@ scripts-send2err "=== Generating peak tables ============="
 scripts-create-path results/
 threads=1
 op=peaktable
-sh=sh
-scripts-master-loop.sh $threads by-branch ./code/chipseq-$op.$sh results/$op "params/params.*.$sh" peaks/results
+scripts-master-loop.sh $threads by-branch ./code/chipseq-$op.tcsh results/$op "params/params.*.tcsh" "inpdirs/*/results"
 
 
 

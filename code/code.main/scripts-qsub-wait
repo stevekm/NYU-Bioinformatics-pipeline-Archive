@@ -1,7 +1,8 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: wait_qsub JOB-IDS [SECONDS=5]
+## USAGE: scripts-wait-qsub JOB-IDS [SECONDS=5]
 ##
 
 set job_ids = ($1)

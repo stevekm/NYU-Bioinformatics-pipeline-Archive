@@ -1,7 +1,6 @@
 #!/bin/tcsh
 
-# Set the parameter values
-# for armatus TAD caller
+source ./inputs/params/params.tcsh
 
 set tool = armatus
-set gamma = .5
+set armatus_params = "-g 0.5"

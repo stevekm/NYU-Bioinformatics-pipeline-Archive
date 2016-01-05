@@ -5,6 +5,8 @@
 *.bam
 *.o
 *.so
+code/bin/*
+data/*
 analyses/*
 results
 .nfs*

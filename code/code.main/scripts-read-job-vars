@@ -2,17 +2,21 @@
 source ./code/code.main/custom-tcshrc         # customize shell environment
 
 ##
-## USAGE: scripts-read-job-vars INPUT-DIRS VARIABLE-NAMES
+## USAGE: scripts-read-job-vars BRANCH-DIR SAMPLES VARIABLE-NAMES
 ##
 
 # process command-line inputs
-if ($#argv != 2) then
+if ($#argv != 3) then
   grep '^##' $0
   exit
 endif
 
-set inpdirs = ($1)
-set vars = ($2)
+set branch = $1
+set samples = ($2)
+set vars = ($3)
+
+# determine input directories
+set inpdirs = `echo "$branch\t$samples" | tools-key-expand | tr '\t' '/'`
 
 # read variables
 foreach name ($vars)

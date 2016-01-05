@@ -1,62 +1,33 @@
 #!/bin/tcsh
+source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-peakdiff.tcsh
+## USAGE: run-peakdiff.tcsh [--dry-run]
 ##
 
-# shell settings (must be included in all scripts)
-source ./code/code.main/custom-tcshrc
-
-if ($#argv != 0) then
-  grep '^##' $0
-  exit
+# process command-line inputs
+if ($#argv > 1) then
+  grep '^##' $0 | scripts-send2err
+  exit 1
 endif
+
+set opt = "$1"
 
 # setup
-set sheet = inputs/sample-sheet.tsv
-set comparisons = inputs/comparisons.tsv
-if (! -e $comparisons) then
-  scripts-send2err "Warning: comparison file \'$comparisons\' not found."
-  exit
-endif
+set op = peakdiff
+set inpdirs = "inpdirs/matrices"
+set filter = "/matrices.[^/]*.nbins_[0-9][0-9]"
+set results = results
+scripts-create-path $results/
+scripts-send2err "=== Operation = $op ============="
+set resources = 1
+set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/chipseq-$op.tcsh"
 
-# run easydiff
-scripts-send2err "=== Running peakdiff ============="
-scripts-create-path results/
-set threads = 1
-set jid = ()
-set X = `cat $comparisons | cut -f1`
-set Y = `cat $comparisons | cut -f2`
-set inpdir = matrices/results
-set D = `cd $inpdir; find . -name 'job.sh' | sed 's/\/[^/]\+\/job.sh//' | sort -u | grep 'nbins_1/' | sed 's/^\.\///'`
-foreach params (params/params.*.tcsh)
-  set params_name = `echo $params | sed 's/^params\/params\.//' | sed 's/\.tcsh$//'`
-  set m = 1
-  while ($m <= $#X)
-    set x = $X[$m]
-    set y = $Y[$m]
-    set comparison = ${x}.${y}
-    if ( (`cat $sheet | grep -v '^#' | cut -f2 | tr '|' '\n' | grep -c "^$x"'$'` == 0) || (`cat $sheet | grep -v '^#' | cut -f2 | tr '|' '\n' | grep -c "^$y"'$'` == 0) ) then
-      scripts-send2err "Warning: sample $x or $y not found, skipping..."
-    else
-      scripts-send2err "-- [$params] comparing $x to $y..."
-      foreach d ($D)
-        set xfiles = `cat $sheet | grep -v '^#' | cut -f1,2 | tr '|' ' ' | key_expand | cols -t 1 0 | grep "^$x	" | cut -f2 | awk -v d=$inpdir/$d '{print d"/"$0"/matrix.tsv"}'`
-        set yfiles = `cat $sheet | grep -v '^#' | cut -f1,2 | tr '|' ' ' | key_expand | cols -t 1 0 | grep "^$y	" | cut -f2 | awk -v d=$inpdir/$d '{print d"/"$0"/matrix.tsv"}'`
-        set outdir1 = results/easydiff.$params_name/$d
-        set outdir2 = $outdir1/easydiff.$comparison
-        set jid = ($jid `scripts-qsub-wrapper $threads ./code/chipseq-peakdiff.tcsh $outdir2 $params "$xfiles" "$yfiles"`)
-      end
-    endif
-    @ m ++
-  end
-end
+# generate run script
+Rscript ./code/code.main/pipeline-master-explorer.r -v -F "$filter" --exclude-obj="input" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "group" 2
 
-scripts-send2err "Waiting for all jobs to finish..."
-scripts-qsub-wait "$jid"
-scripts-send2err "Done."
-
-
+# run and wait until done!
+if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run
 
 
 

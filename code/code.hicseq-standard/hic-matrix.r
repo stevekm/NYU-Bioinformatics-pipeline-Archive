@@ -12,6 +12,16 @@ cor1D <- function(x,y,method) { sapply(seq.int(dim(x)[1]),function(i) cor(as.vec
 # row correlations (2D)
 cor2D <- function(x,y,method) { sapply(seq.int(dim(x)[1]),function(i) cor(as.vector(x[i,,]),as.vector(y[i,,]),method=method)) }
 
+
+# print_options
+print_options <- function(opt)
+{
+  write("OPTIONS: \n",stderr())
+  sink(stderr())
+  print(opt)
+  sink(stdout())
+}
+
  
 # contact matrix stats
 matrix_stats <- function(x)
@@ -132,6 +142,25 @@ CalcDF <- function(X,distance,tolerance)
 is_full_matrix <- function(mat)
 {
   return((nrow(mat)==ncol(mat))&&(prod(rownames(mat)==colnames(mat))==1))
+}
+
+
+
+#
+# MatrixImpute
+#
+MatrixImpute <- function(mat,ignored_rows,ignored_cols) 
+{
+  if (min(mat,na.rm=TRUE)<0) { write("Error: imputation only works for non-negative matrices!", stderr()); quit(save='no') }
+  na_value = -1
+  mat[is.na(mat)] = na_value;
+  outmat = matrix(.C("impute",as.double(mat),nrow(mat),na_value,y=double(length(mat)))$y,nrow(mat))
+  outmat = (outmat+t(outmat))/2
+  outmat[ignored_rows,] = 0          # ignored bins are set to zero!
+  outmat[,ignored_cols] = 0
+  rownames(outmat) = rownames(mat)
+  colnames(outmat) = colnames(mat)
+  return(outmat)
 }
 
 
@@ -488,18 +517,18 @@ op_estimate <- function(cmdline_args)
     make_option(c("--row-labels"), action="store_true",default=FALSE, help="Input matrix has row labels"),
     make_option(c("-o","--output-file"), default="", help="Output RData file (required) [default=\"%default\"]."),
     make_option(c("-C","--chrom-feature-file"), default="", help="Chromosome feature file (not required) [default=\"%default\"]."),
-    make_option(c("--na-to-zero"), action="store_true",default=FALSE, help="Replace NA values with zero."),
+    make_option(c("--impute"), action="store_true",default=FALSE, help="Impute matrix (only for symmetric matrices; default=replace NAs with zeros)."),
     make_option(c("--ignored-loci"), default="", help="Ignored row and column names found in this list (not required) [default=\"%default\"]."),
     make_option(c("--pseudo"), default=1, help="Pseudocount value to be added to input matrix elements [default=%default]."),
     make_option(c("--min-score"), default=1, help="Minimum HiC score in input matrix [default=%default]."),
     make_option(c("--skip-distance"), default=0, help="Elements near diagonal up to this distance will be set to zero [default=%default]."),
     make_option(c("--preprocess"), default="none", help="Matrix preprocessing: none (default), max, mean, log2, log2mean, rank, dist, distlog2"),
-    make_option(c("--min-lambda"), default=0.0, help="Minimum value for fusing parameter lambda [default=%default]."),
-    make_option(c("--max-lambda"), default=Inf, help="Maximum value for fusing parameter lambda [default=%default]."),
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda [default=%default]."),
+    make_option(c("--max-lambda"), default=Inf, help="Maximum value for parameter lambda [default=%default]."),
     make_option(c("--n-lambda"), default=1, help="Number of lambdas [default=%default]."),
     make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range."),
     make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma [default=%default]."),
-    make_option(c("--algorithm"), default="fused2d_flsa", help="Algorithm to be used: fused2D_flsa (default), fused2Dzone_flsa or fused1D_flsa"),
+    make_option(c("--algorithm"), default="fused2D_flsa", help="Algorithm to be used: fused2D_flsa (default) or fused1D_flsa"),
     make_option(c("--zone-size"), default=0, help="Maximum distance from diagonal (number of bins) [default=%default]."),
     make_option(c("--symm"), action="store_true",default=FALSE, help="Make output matrices symmetric (only for fused1D_flsa)."),
     make_option(c("--threshold"), default=1e-05, help="The error threshold used in the algorithm [default=%default]."),
@@ -510,6 +539,7 @@ op_estimate <- function(cmdline_args)
   # get command line options (if help option encountered print help and exit)
   arguments <- parse_args(args=cmdline_args,OptionParser(usage=usage,option_list=option_list),positional_arguments=c(0,Inf));
   opt <- arguments$options
+  if (opt$verbose) print_options(opt) 
   files <- arguments$args;
   if (length(files)!=1) { write(paste('Usage:',usage),stderr()); quit(save='no'); }
   
@@ -519,7 +549,6 @@ op_estimate <- function(cmdline_args)
   fignored = opt$"ignored-loci"
   row_labels = opt$"row-labels"
   fout = opt$"output-file"
-  na_to_zero = opt$"na-to-zero"
   pseudo = opt$pseudo
   min_hicscore = opt$'min-score'
   skip_dist = opt$'skip-distance'
@@ -531,19 +560,35 @@ op_estimate <- function(cmdline_args)
   gammas = opt$gamma
   err_threshold = opt$"threshold"
   splitCheckSize = opt$'split-check-size'
-  algorithm = tolower(opt$algorithm)
+  opt$algorithm = tolower(opt$algorithm)
+  algorithm = opt$algorithm
   zone_size = opt$"zone-size"
-  if (opt$verbose) { write("OPTIONS: \n",stderr()); print(opt,file=stderr()); }
+  rotate45 = zone_size>0
   
   # Error checking on input arguments
+  if ((algorithm!='fused2d_flsa')&(algorithm!='fused1d_flsa')) { write(paste('Error: unknown estimation algorithm "',algorithm,'"!',sep=''),stderr()); quit(save='no') }
   if (fout=="") { write('Error: please specify output file!',stderr()); quit(save='no'); }
   
   # read matrix
   if (opt$verbose) { write('Loading matrix...',stderr()); }
   if (row_labels==FALSE) { x = as.matrix(read.table(fmatrix,check.names=F)) } else { x = as.matrix(read.table(fmatrix,row.names=1,check.names=F)) }
   
-  # convert NAs to zeros
-  if (na_to_zero==TRUE) x[is.na(x)] = 0
+  # read ignored loci information
+  ignored_rows = integer(0)
+  ignored_cols = integer(0)
+  if (fignored!="") {
+    ignored_rows = sort(which(!is.na(match(rownames(x),as.vector(t(read.table(fignored,check.names=F)))))))
+    ignored_cols = sort(which(!is.na(match(colnames(x),as.vector(t(read.table(fignored,check.names=F)))))))
+  }
+
+  # impute symmetric matrix or replace NAs with zeros
+  if ((is_full_matrix(x)==TRUE)&(opt$"impute"==TRUE)) {
+    if (opt$verbose) write('Imputing matrix...',stderr())
+    x = MatrixImpute(x,ignored_rows,ignored_cols)
+    if (opt$verbose) write(paste('Imputed matrix symmetricity = ',sum(x==t(x))/length(x),sep=''),stderr())
+  } else {
+    x[is.na(x)] = 0
+  }
   
   # restrict input matrices to specified distance from diagonal (only applicable to distance-restricted matrices; full matrices are not modified)
   if ((zone_size<=0)||(zone_size>nrow(x))) zone_size = nrow(x)
@@ -562,16 +607,10 @@ op_estimate <- function(cmdline_args)
   }
 
   # set ignored rows to zero
-  ignored_rows = integer(0)
-  ignored_cols = integer(0)
-  if (fignored!="") {
-    ignored_rows = sort(which(!is.na(match(rownames(x),as.vector(t(read.table(fignored,check.names=F)))))))
-    ignored_cols = sort(which(!is.na(match(colnames(x),as.vector(t(read.table(fignored,check.names=F)))))))
-    if (opt$verbose) { write(paste('Number of rows set to zero in input matrix (ignored loci) = ',length(ignored_rows),sep=''),stderr()); }
-    if (opt$verbose) { write(paste('Number of columns set to zero in input matrix (ignored loci) = ',length(ignored_cols),sep=''),stderr()); }
-    x[ignored_rows,] = 0
-    x[,ignored_cols] = 0
-  }
+  if (opt$verbose) { write(paste('Number of rows set to zero in input matrix (ignored loci) = ',length(ignored_rows),sep=''),stderr()); }
+  if (opt$verbose) { write(paste('Number of columns set to zero in input matrix (ignored loci) = ',length(ignored_cols),sep=''),stderr()); }
+  x[ignored_rows,] = 0
+  x[,ignored_cols] = 0
 
   # set elements near diagonal to zero
   if (skip_dist>0) {
@@ -582,64 +621,42 @@ op_estimate <- function(cmdline_args)
   # preprocess input matrix
   y = PreprocessMatrix(x,preprocess=preprocess,pseudo=pseudo,cutoff=min_hicscore)
   
-  # rotated matrix (only for fused2Dzone)
-  z = NULL
-  
   # create lambda values (zero always included if log2 scale)
   if (max_lambda==Inf) { lambdas = NULL; 
   } else if (log2_lambda==FALSE) { lambdas = unique(seq(min_lambda,max_lambda,length.out=n_lambda));
   } else { lambdas = unique(c(0,2^seq(log2(max(min_lambda,0.01)),log2(max_lambda),length.out=n_lambda-1))); }
   n_lambda = length(lambdas)
   n_matrices = n_lambda
-  n = nrow(y)
-  m = ncol(y)
   
-  # ##########################################
-  # estimation algorithm = fused1D/FLSA
-  # ##########################################
-  if (algorithm == 'fused1d_flsa') {
-    if (opt$verbose) { write('Estimating contact matrix...',stderr()); }
-    solObj = flsa(as.vector(y),connListObj=NULL,lambda1=gammas,lambda2=lambdas,verbose=opt$'flsa-verbose',thr=err_threshold,splitCheckSize=splitCheckSize);
-    if (is.null(lambdas)==FALSE) { 
-      #if ((length(dim(solObj))==4)&(dim(solObj)[1]==1)) { solObj = solObj[1,,,]; }   # TODO: check this code; it applies when you have multiple lambdas and gammas
-      if (opt$verbose) write('Post-processing...',stderr())
-      solObj1 = array(0,dim=c(n_matrices,n,m))
-      for (i in 1:n_matrices) {
-        solObj1[i,,] = as.matrix(solObj[i,],n,m)
-        if ((opt$symm==TRUE)&(n==m)) solObj1[i,,] = (solObj1[i,,]+t(solObj1[i,,]))/2
+  # ##########################################################
+  # estimation algorithm = fused/FLSA
+  # ##########################################################
+  if ((algorithm=='fused2d_flsa')|(algorithm=='fused1d_flsa')) {
+
+    # rotate, if --zone-size>0
+    if (rotate45==TRUE) {
+      if (opt$verbose) { write('Rotating input matrix...',stderr()); }
+      if (opt$verbose) {
+        coverage = sum(x[abs(row(x)-col(x))<=zone_size])/sum(x)
+        write(paste('coverage = ',coverage,sep=''),file=stderr())
       }
-      solObj = solObj1
+      x = MatrixRotate45(x,zone_size)       # replace input matrix with rotated version
+      y = MatrixRotate45(y,zone_size)       # replace preprocessed input matrix with rotated version
+      ignored_cols = c()
     }
     
-  # ##########################################
-  # estimation algorithm = fused2D/FLSA
-  # ##########################################
-  } else if ((algorithm=='fused2d_flsa')||((algorithm=='fused2dzone_flsa')&&(is_full_matrix(x)==FALSE))) {
-    if (opt$verbose) { write('Estimating contact matrix...',stderr()); }
-    solObj = flsa(y,connListObj=NULL,lambda1=gammas,lambda2=lambdas,verbose=opt$'flsa-verbose',thr=err_threshold,splitCheckSize=splitCheckSize);
-    if (is.null(lambdas)==FALSE) { if ((length(dim(solObj))==4)&(dim(solObj)[1]==1)) { solObj = solObj[1,,,]; } }
-    
-  # ##########################################
-  # estimation algorithm = fused2Dzone/FLSA
-  # ##########################################
-  } else if (algorithm == 'fused2dzone_flsa') {
-    if (opt$verbose) { write('Rotating input matrix...',stderr()); }
-    z = MatrixRotate45(y,zone_size)
-    if (opt$verbose) {
-      coverage = sum(x[abs(row(x)-col(x))<=zone_size])/sum(x)
-      write(paste('coverage = ',coverage,sep=''),file=stderr())
-    }
+    # if 1D, then convert to vector
+    if (algorithm=='fused2d_flsa') { z = y } else if (algorithm=='fused1d_flsa') { z = as.vector(y) }
     
     # estimate
-    if (opt$verbose) { write('Estimating contact matrix...',stderr()); }
+    if (opt$verbose) { write('Estimating contact matrix (rotate=TRUE)...',stderr()); }
     solObj = flsa(z,connListObj=NULL,lambda1=gammas,lambda2=lambdas,verbose=opt$'flsa-verbose',thr=err_threshold,splitCheckSize=splitCheckSize)
-    if (is.null(lambdas)==FALSE) {
-      if (length(dim(solObj))==4) solObj = solObj[1,,,];
-      # inverse-rotate
-      if (opt$verbose) { write('Inverse-rotating estimated matrices...',stderr()); }
-      solObj1 = array(0,dim=c(n_matrices,n,n));
-      for (i in 1:n_matrices) solObj1[i,,] = MatrixInverseRotate45(solObj[i,,])
-      solObj = solObj1;
+
+    # convert 1D back to 2D if max-lambda!=Inf
+    if ((algorithm=='fused1d_flsa')&&(is.null(lambdas)==FALSE)) {
+      solObj1 = array(0,dim=c(n_matrices,dim(y)))
+      for (i in 1:n_matrices) solObj1[i,,] = matrix(solObj[i,],nrow(y))
+      solObj = solObj1
     }
     
   } else {
@@ -647,15 +664,19 @@ op_estimate <- function(cmdline_args)
     quit(save='no')
   }
 
-  # Post-processing: negative values and ignored rows are set to zero  (TODO: keeping negative values should be an option)
+  # Post-processing: negative values and ignored rows/columns are set to zero  (TODO: keeping negative values should be an option)
   if (is.null(lambdas)==FALSE) {
     if (opt$verbose) { write('Post-processing estimated matrices...',stderr()); }
-    for (i in 1:n_matrices) { solObj[i,ignored_rows,] = 0; solObj[i,,ignored_cols] = 0; solObj[i,,][solObj[i,,]<0] = 0 }
+    for (i in 1:n_matrices) { 
+      solObj[i,ignored_rows,] = 0
+      solObj[i,,ignored_cols] = 0
+      solObj[i,,][solObj[i,,]<0] = 0
+    }
   }
 
   # save and exit
   if (opt$verbose) { write('Saving data to RData file...',stderr()); }
-  save(x,y,z,opt,ignored_rows,ignored_cols,lambdas,gammas,solObj,file=fout)
+  save(x,y,opt,ignored_rows,ignored_cols,lambdas,gammas,solObj,file=fout)
   if (opt$verbose) { write('Done.',stderr()) }
   quit(save='no')
 }
@@ -667,12 +688,12 @@ op_estimate <- function(cmdline_args)
 #  GetSolution
 # ########################
 
-GetSolution = function(solObj, n_rows, estimation_algorithm, lambda, gamma) 
+GetSolution = function(solObj, n_rows, invrotate, lambda, gamma) 
 {
   s = flsaGetSolution(solObj,lambda1=gamma,lambda2=lambda)
   if (length(dim(s))==2) { s = s[1,] } else if (length(dim(s))==3) { s = s[1,1,] }
   mat = matrix(s,n_rows)
-  if (estimation_algorithm == 'fused2dzone_flsa') return(MatrixInverseRotate45(mat))
+  if (invrotate==TRUE) return(MatrixInverseRotate45(mat))
   return(mat)
 }
 
@@ -688,8 +709,8 @@ op_extract = function(cmdline_args)
   option_list <- list(
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
     make_option(c("-o","--output-file"), default="", help="Output RData file (required) [default=\"%default\"]."),
-    make_option(c("--min-lambda"), default=0.0, help="Minimum value for fusing parameter lambda [default=%default]."),
-    make_option(c("--max-lambda"), default=Inf, help="Maximum value for fusing parameter lambda [default=%default]."),
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda [default=%default]."),
+    make_option(c("--max-lambda"), default=Inf, help="Maximum value for parameter lambda [default=%default]."),
     make_option(c("--n-lambda"), default=1, help="Number of lambdas [default=%default]."),
     make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range."),
     make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma [default=%default].")
@@ -716,7 +737,7 @@ op_extract = function(cmdline_args)
   n_lambda = opt$"n-lambda" = new_opt$"n-lambda"
   log2_lambda = opt$"log2-lambda" = new_opt$"log2-lambda"
   gammas = opt$gamma = new_opt$gamma
-  if (opt$verbose) { write("OPTIONS: \n",stderr()); print(opt,file=stderr()); }
+  if (opt$verbose) print_options(opt) 
   
   # Error checking on input arguments
   if (fout=="") { write('Error: please specify output file!',stderr()); quit(save='no'); }
@@ -732,8 +753,8 @@ op_extract = function(cmdline_args)
   # create new estimated matrices for specific lambdas/gammas
   if (opt$verbose) { write('Computing solutions for specific lambdas/gammas...',stderr()); }
   solObj0 = solObj
-  solObj = array(0,dim=c(n_matrices,n,ifelse(algorithm=='fused2dzone_flsa',n,m)))
-  for (i in 1:n_matrices) solObj[i,,] = GetSolution(solObj0,n_rows=n,estimation_algorithm=algorithm,lambda=lambdas[i],gamma=gammas[1])
+  solObj = array(0,dim=c(n_matrices,n,m))
+  for (i in 1:n_matrices) solObj[i,,] = GetSolution(solObj0,n_rows=n,invrotate=FALSE,lambda=lambdas[i],gamma=gammas[1])
 
   # Post-processing: negative values and ignored rows are set to zero  (TODO: keeping negative values should be an option)
   if (is.null(lambdas)==FALSE) {
@@ -782,6 +803,7 @@ op_preprocess <- function(cmdline_args)
   
   arguments <- parse_args(args=cmdline_args,OptionParser(usage=usage,option_list=option_list),positional_arguments=c(0,Inf));
   opt <- arguments$options
+  if (opt$verbose) print_options(opt) 
   files <- arguments$args;
   if (length(files)!=1) { write(paste('Usage:',usage),stderr()); quit(save='no'); }
   
@@ -791,7 +813,6 @@ op_preprocess <- function(cmdline_args)
   pseudo = opt$pseudo
   min_hicscore = opt$'min-score'
   preprocess = opt$preprocess
-  if (opt$verbose) { write("OPTIONS: \n",stderr()); print(opt,file=stderr()); }
   
   # read files
   if (opt$verbose) { write('Loading matrix...',stderr()); }
@@ -802,7 +823,7 @@ op_preprocess <- function(cmdline_args)
 
   # print new matrix
   if (opt$verbose) { write("Printing new matrix...",stderr()); }
-  write.table(round(y,3),quote=F,sep='\t')
+  write.table(format(y,scientific=TRUE,digits=4),quote=F,sep='\t')
 
   # done
   if (opt$verbose) { write("Done.",stderr()); }
@@ -823,18 +844,21 @@ op_normalize <- function(cmdline_args)
   # process command-line arguments
   option_list <- list(
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
+    make_option(c("-o","--output-file"), default="", help="Output matrix tsv file (required) [default \"%default\"]."),
     make_option(c("--n-reads"), default=0, help="Total number of (intrachromosomal) reads per sample (required) [default \"%default\"]."),
     make_option(c("--features"), default="", help="Feature file [default \"%default\"]."),
     make_option(c("--ignored-loci"), default="", help="Ignored row and column names found in this list (not required) [default=\"%default\"]."),
     make_option(c("--min-efflen"), default=100, help="Minimum effective length [default \"%default\"]."),
     make_option(c("--min-mappability"), default=0.2, help="Minimum mappability [default \"%default\"]."),
-    make_option(c("-o","--output-file"), default="", help="Output matrix tsv file (required) [default \"%default\"]."),
+    make_option(c("--scale"), action="store_true",default=FALSE, help="Scale matrix by total number of reads and effective length."),
+    make_option(c("--impute"), action="store_true",default=FALSE, help="Impute matrix."),
     make_option(c("--dist"), default=0, help="Distance in number of bins [default \"%default\"].")
   )
   usage = 'hic-matrix.r normalize [OPTIONS] MATRIX';
   
   arguments = parse_args(args=cmdline_args,OptionParser(usage=usage,option_list=option_list),positional_arguments=c(0,Inf));
   opt = arguments$options
+  if (opt$verbose) print_options(opt)
   files = arguments$args
   out = opt$"output-file"
   n_reads = opt$'n-reads'
@@ -856,15 +880,6 @@ op_normalize <- function(cmdline_args)
   n_unmatched = sum(is.na(i))
   if (n_unmatched>0) write(paste('Warning: ',n_unmatched,' loci were not matched to feature matrix!',sep=''),stderr())
 
-  # normalize by effective length and total number of reads
-  if (opt$verbose) write('Normalizing/scaling matrix...',stderr())
-  efflen = as.matrix(features[i,'effective-length'])
-  efflen2 = efflen %*% t(efflen)
-  mappability = as.matrix(features[i,'mappability'])
-  mappability2 = mappability %*% t(mappability)
-  y = x/(efflen2/1000)/(n_reads/1e9)
-  y[(efflen2<opt$'min-efflen'^2)|(mappability2<opt$'min-mappability'^2)] = NA         # regions with low effective length and/or low mappability will be considered as missing values
-
   # set ignored loci rows/columns to zero
   ignored_rows = integer(0)
   ignored_cols = integer(0)
@@ -873,10 +888,37 @@ op_normalize <- function(cmdline_args)
     ignored_cols = sort(which(!is.na(match(colnames(x),as.vector(t(read.table(opt$'ignored-loci',check.names=F)))))))
     if (opt$verbose) { write(paste('Number of rows set to zero in input matrix (ignored loci) = ',length(ignored_rows),sep=''),stderr()); }
     if (opt$verbose) { write(paste('Number of columns set to zero in input matrix (ignored loci) = ',length(ignored_cols),sep=''),stderr()); }
-    y[ignored_rows,] = 0          # ignored bins are set to zero!
-    y[,ignored_cols] = 0
+    x[ignored_rows,] = 0          # ignored bins are set to zero!
+    x[,ignored_cols] = 0
   }
 
+  # normalize by effective length and total number of reads
+  if (opt$"scale"==TRUE) {
+    if (opt$verbose) write('Scaling matrix...',stderr())
+    efflen = as.matrix(features[i,'effective-length'])
+    efflen2 = efflen %*% t(efflen)
+    mappability = as.matrix(features[i,'mappability'])
+    mappability2 = mappability %*% t(mappability)
+    y = x/(efflen2/1e6)/(n_reads/1e9)
+    y[(efflen2<opt$'min-efflen'^2)|(mappability2<opt$'min-mappability'^2)] = NA         # regions with low effective length and/or low mappability will be considered as missing values
+    if (opt$verbose) {
+      write(paste('Max value of original matrix = ',max(x,na.rm=TRUE),sep=''),stderr())
+      write(paste('Max value of scaled matrix = ',max(y,na.rm=TRUE),sep=''),stderr())
+    }
+  } else {
+    y = x
+  }
+
+  # impute symmetric matrix
+  if (opt$"impute"==TRUE) {
+    if (opt$verbose) write('Imputing matrix...',stderr())
+    y = MatrixImpute(y,ignored_rows,ignored_cols)
+    if (opt$verbose) {
+      write(paste('Symmetricity of original matrix = ',sum(x==t(x))/length(x),sep=''),stderr())
+      write(paste('Symmetricity of imputed matrix = ',sum(y==t(y))/length(y),sep=''),stderr())
+    }
+  }
+  
   if (opt$dist>0) {
     # rotate matrix
     if (opt$verbose) write('Rotating matrix...',stderr())
@@ -885,7 +927,7 @@ op_normalize <- function(cmdline_args)
   
   # print new matrix
   if (opt$verbose) write("Saving new matrix...",stderr())
-  write.table(y,row.names=TRUE,col.names=ifelse(opt$dist>0,FALSE,TRUE),quote=FALSE,sep='\t',file=out)
+  write.table(format(y,scientific=TRUE,digits=4),row.names=TRUE,col.names=ifelse(opt$dist>0,FALSE,TRUE),quote=FALSE,sep='\t',file=out)
 
   # done
   if (opt$verbose) write("Done.",stderr())
@@ -938,7 +980,7 @@ op_standardize <- function(cmdline_args)
 
   # print new matrix
   if (opt$verbose) { write("Printing new matrix...",stderr()); }
-  write.table(round(y,3),quote=F,sep='\t')
+  write.table(format(y,scientific=TRUE,digits=4),quote=F,sep='\t')
 
   # done
   if (opt$verbose) { write("Done.",stderr()); }
@@ -1062,54 +1104,63 @@ op_stats <- function(cmdline_args)
   option_list <- list(
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
     make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"]."),
+    make_option(c("-b","--bin-size"), default=0, help="Bin size in nucleotides [default \"%default\"]."),
+#    make_option(c("-L","--sample-labels"), default="", help="Comma-separated list of sample labels (required) [default \"%default\"]."),
     make_option(c("--features"), default="", help="Feature file [default \"%default\"].")
   );
-  usage = 'hic-matrix.r stats [OPTIONS] MATRIX(tsv/RData)';
+  usage = 'hic-matrix.r stats [OPTIONS] MATRIX-DIRECTORIES';
   
   # get command line options (if help option encountered print help and exit)
-  arguments <- parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf));
-  options <- arguments$options;
-  files <- arguments$args;
-  if (length(files)<1) { write('Error: this operation requires at least one input file (tsv or RData)!',stderr()); quit(save='no'); }
-
-  # input arguments
-  out_dir = options$'output-dir'
+  arguments = parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf))
+  opt = arguments$options
+  inp_dirs = arguments$args
+  out_dir = opt$'output-dir'
+  bin_size = as.integer(opt$"bin-size")
+#  if (opt$"sample-labels"=="") { write('Error: please specify sample labels!',stderr()); quit(save='no'); }
+#  sample_labels = unlist(strsplit(opt$"sample-labels",split=','))
+  sample_labels = sub(".*/","",inp_dirs)
 
   # create output directory
   if (out_dir=="") { write('Error: please specify output directory!',stderr()); quit(save='no'); }
-  if (file.exists(out_dir)==FALSE) { dir.create(out_dir) } else { write('Error: output directory already exists!',stderr()); quit(save='no'); }
+  if (file.exists(out_dir)==FALSE) dir.create(out_dir)
 
   # load matrices
-  if (options$verbose) { write("Loading data...",stderr()); }
-  f = files[1]
-  ext = strsplit(f,'.*[.]')[[1]][2]
-  if (ext=="RData") {
-    load(f)
-  } else {
-    n_files = length(files)
-    y = as.matrix(read.table(files[1],check.names=F))
-    solObj = array(0,dim=c(n_files,dim(y)[1],dim(y)[2]))         # all matrices should have the same dimensions
-    for (k in 1:n_files) solObj[k,,] = as.matrix(read.table(files[k],check.names=F))
+  n_bins = 50000000/bin_size
+  D = matrix(0,length(inp_dirs),n_bins)
+  k = 1
+  while (k <= length(inp_dirs)) {
+    files = Sys.glob(paste(inp_dirs[k],"matrix.*.tsv",sep="/"))
+    for (f in files) {
+      if (opt$verbose) write(paste("Processing matrix '",f,"'...",sep=''),stderr())
+      x = as.matrix(read.table(f,check.names=F))
+      x[is.na(x)] = 0
+      counts = calc_counts_per_distance(x)                     # average Hi-C count per distance for each matrix
+      counts = c(counts,rep(0,n_bins))[1:n_bins]               # truncate or pad with zeroes
+      D[k,] = D[k,] + counts
+    }
+    D[k,] = D[k,]/length(files)
+    k = k + 1
   }
-  if (options$features!="") features = as.matrix(read.table(options$features,row.names=1,check.names=F))
-  
-  # create plots
-  pdf(paste(out_dir,'/stats.pdf',sep=''))
 
-  # calculate Hi-C count averages as a function of distance d
-  if (options$verbose) { write("Calculating Hi-C count averages as a function of distance...",stderr()); }
-  D = apply(solObj,1,calc_counts_per_distance)                # average Hi-C count per distance for each matrix
-  colors = c('blue','green4','red','magenta','yellow','cyan','brown','pink')
-  colors = rep(colors,ceiling(ncol(D)/length(colors)))[1:ncol(D)]
+  # create Hi-C count vs distance plot
+  pdf(paste(out_dir,'/stats.pdf',sep=''))
+  colors = c('blue','green4','red','magenta','yellow','cyan','brown','pink','orange','gray','black','purple')
+  colors = rep(colors,ceiling(nrow(D)/length(colors)))[1:nrow(D)]
   par(mfrow=c(2,1))
-  plot(D[,1],type='l',col=colors[1],log="xy",xlab='distance (number of bins)',ylab='Average normalized Hi-C count',main='Hi-C count as a function of distance')
-  for (k in 1:ncol(D)) lines(D[,k],col=colors[k])
+  ylim = c(min(D[D>0]),max(D))
+  d = (1:ncol(D))*bin_size/1000
+  plot(d,D[1,],type='l',col=colors[1],log="xy",xlab='distance (kb)',ylab='Average normalized Hi-C count',main='Hi-C count as a function of distance',ylim=ylim)
+  for (k in 1:nrow(D)) lines(d,D[k,],col=colors[k])
   plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-  legend(x='top',cex=0.75,legend=files,col=colors,lwd=2)
-  
+  legend(x='top',cex=0.70,legend=sample_labels,col=colors,lwd=2)
+  dev.off()  
+
+  quit(save='no')
+
   # correlations with features
-  if (options$features!="") {
-    if (options$verbose) { write("Computing correlations with features...",stderr()); }
+  if (opt$features!="") features = as.matrix(read.table(opt$features,row.names=1,check.names=F))
+  if (opt$features!="") {
+    if (opt$verbose) { write("Computing correlations with features...",stderr()); }
     a = which(rownames(features)==rownames(y)[1])
     b = which(rownames(features)==rownames(y)[nrow(y)])
     features = features[a:b,]
@@ -1129,18 +1180,9 @@ op_stats <- function(cmdline_args)
   }
   
   # done
-  dev.off()
   save(files,D,file=paste(out_dir,'/stats.RData',sep=''))
-  if (options$verbose) { write("Done.",stderr()); }
+  if (opt$verbose) { write("Done.",stderr()); }
   quit(save='no')
-
-## under development (show distribution of counts for fixed distance)
-  y = log2(x+1)
-  z = y/max(y)
-  n = 50
-  cc = t(sapply(1:100,function(d) hist(z[D==d],breaks=0:n/n,plot=FALSE)$counts))
-  cc = cc[,2:ncol(cc)]
-  zz = cc/apply(cc,1,max)
 
 }
 
@@ -1361,11 +1403,11 @@ Input: \
   # Get command line options (if help option encountered print help and exit)
   arguments <- parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf))
   opt <- arguments$options
+  if (opt$verbose) print_options(opt)
   files <- arguments$args
   if (length(files)==0) { write(paste('Usage:',usage),stderr()); quit(save='no') }
 
   # Input arguments
-  print(opt)
   out_dir = opt$'output-dir'
   n_reads = as.integer(strsplit(opt$'n-reads', ",")[[1]])
   bin_size = opt$'bin-size'
@@ -1422,12 +1464,12 @@ Input: \
   i_selected = apply(z,1,max) & (abs(as.vector(D))>=min_dist)                                          # apply minimum distance cutoff
   n_selected = sum(i_selected)
   if (opt$verbose) write(paste("Selected interactions = ",n_selected,sep=''),stderr())
-  if (n_selected==0) { write("No interactions found!", stderr()); quit(save='no') }
+  if (n_selected==0) { write("No interactions found!", stderr()); system(paste('touch ',out_dir,'/loops.tsv',sep='')); quit(save='no') }
   
   # Generate table
   if (opt$verbose) write("Generating table...",stderr())
   if (full_matrix[1]==TRUE) {                                    # get loci labels
-    table = cbind(melt(x_raw[[1]]))[i_selected,1:2]
+    table = cbind(melt(x_raw[[1]]))[i_selected,1:2,drop=FALSE]
   } else {
     rnames = rownames(x_raw[[1]])
     N = length(rnames)
@@ -1438,7 +1480,7 @@ Input: \
   table = cbind(table,as.integer(D[i_selected]))
   colnames(table) = c('locus1','locus2',sapply(sample_labels,paste,'-hic-count',sep=''),sapply(sample_labels,paste,'-hic-scaled',sep=''),sapply(sample_labels,paste,'-hic-distnorm',sep=''),'distance')
   if (full_matrix[1]==FALSE) {                                   # reverse order of loci to account for loop symmetricity (not necessary for full matrices)
-    table2 = table[,c(2,1,3:ncol(table))]
+    table2 = table[,c(2,1,3:ncol(table)),drop=FALSE]
     colnames(table2) = colnames(table)
     table2[,'distance'] = -as.integer(table2[,'distance'])
     table = rbind(table,table2)
@@ -1487,8 +1529,13 @@ op_matrices <- function(cmdline_args)
   # process command-line arguments
   option_list <- list(
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
-    make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"].")
-  );
+    make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"]."),
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda [default=%default]."),
+    make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda [default=%default]."),
+    make_option(c("--n-lambda"), default=6, help="Number of lambdas [default=%default]."),
+    make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range."),
+    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma [default=%default].")
+  )
   usage = 'hic-matrix.r matrices [OPTIONS] ESTIMATED-RDATA-FILE';
   
   # get command line options (if help option encountered print help and exit)
@@ -1505,19 +1552,48 @@ op_matrices <- function(cmdline_args)
   if (out_dir=="") { write('Error: please specify output directory!',stderr()); quit(save='no'); }
   if (file.exists(out_dir)==FALSE) { dir.create(out_dir) } else { write('Error: output directory already exists!',stderr()); quit(save='no'); }
 
-  # create matrices  
-  if (opt$verbose) { write("Loading data...",stderr()); }
-  load(f);
-  if (opt$verbose) { write("Saving contact maps...",stderr()); }
-  n_matrices = dim(solObj)[1];
-  for (k in 1:n_matrices) {
-    z = solObj[k,,];
-    rownames(z) = rownames(y);
-    write.table(z,file=paste(out_dir,'/estimated.k=',formatC(k,width=3,format='d',flag='0'),'.dat',sep=''),row.names=TRUE,col.names=FALSE,quote=FALSE,sep=' ');
+  # load estimated matrices (RData file)
+  if (opt$verbose) write("Loading data...",stderr())
+  e = new.env()
+  load(f,e)
+  
+  # inverse rotate45 (TODO: make this an option?)
+  invrotate = is_full_matrix(e$x)==FALSE
+  
+  # save matrices in text format
+  if (e$opt$"max-lambda"==Inf) {
+    # create lambda values (zero always included if log2 scale)
+    if (opt$"log2-lambda"==FALSE) { lambdas = unique(seq(opt$"min-lambda",opt$"max-lambda",length.out=opt$"n-lambda"))
+    } else { lambdas = unique(c(0,2^seq(log2(max(opt$"min-lambda",0.01)),log2(opt$"max-lambda"),length.out=opt$"n-lambda"-1))) }
+
+    # create new estimated matrices for specific lambdas/gammas
+    if (opt$verbose) write('Saving estimated matrices for specific lambdas/gammas...',stderr())
+    n_matrices = length(lambdas)
+    for (k in 1:n_matrices) {
+      z = GetSolution(e$solObj,n_rows=nrow(e$y),invrotate=invrotate,lambda=lambdas[k],gamma=opt$gamma)
+      rownames(z) = rownames(e$y)
+      colnames(z) = colnames(e$y)
+      fout = paste(out_dir,'/matrix.k=',formatC(k,width=3,format='d',flag='0'),'.tsv',sep='')
+      write.table(format(z,scientific=TRUE,digits=4),row.names=TRUE,col.names=is_full_matrix(z),quote=FALSE,sep='\t',file=fout)
+    }
+  
+  } else {
+    # save matrices for each lambda value
+    if (opt$verbose) write("Saving estimated matrices...",stderr())
+    n_matrices = dim(e$solObj)[1]
+    for (k in 1:n_matrices) {
+      z = e$solObj[k,,]
+      if (invrotate==TRUE) return(MatrixInverseRotate45(z))
+      rownames(z) = rownames(e$y)
+      colnames(z) = colnames(e$y)
+      fout = paste(out_dir,'/matrix.k=',formatC(k,width=3,format='d',flag='0'),'.tsv',sep='')
+      write.table(format(z,scientific=TRUE,digits=4),row.names=TRUE,col.names=is_full_matrix(z),quote=FALSE,sep='\t',file=fout)
+    }
   }
 
   # done
-  quit(save='no');
+  if (opt$verbose) write("Done.",stderr())
+  quit(save='no')
 }
 
 
@@ -1650,6 +1726,42 @@ op_snapshots <- function(cmdline_args)
 
   
 
+###### ExtractEstimations
+
+ExtractEstimations = function(filename, opt)
+{ 
+  # load estimation
+  e = new.env()
+  load(filename,e)
+
+  if (e$opt$"max-lambda"==Inf) {
+    # setup
+    algorithm = e$opt$algorithm
+    n = nrow(e$x)
+    m = ncol(e$x)
+  
+    # create lambdas
+    e$opt$"max-lambda" = opt$"max-lambda"
+    e$opt$"min-lambda" = opt$"min-lambda"
+    e$opt$"n-lambda" = opt$"n-lambda"
+    e$opt$"log2-lambda" = opt$"log2-lambda"
+    e$opt$gamma = opt$gamma
+    if (opt$"max-lambda"==Inf) { lambdas = NULL;   # TODO: Error message!
+    } else if (opt$"log2-lambda"==FALSE) { lambdas = unique(seq(opt$"min-lambda",opt$"max-lambda",length.out=opt$"n-lambda"));
+    } else { lambdas = unique(c(0,2^seq(log2(max(opt$"min-lambda",0.01)),log2(opt$"max-lambda"),length.out=opt$"n-lambda"-1))); }
+    n_matrices = length(lambdas)
+    e$lambdas = lambdas
+    e$gammas = opt$gamma
+    
+    # create new estimated matrices for specific lambdas/gammas
+    if (opt$verbose) { write('Extracting solutions for specific lambdas/gammas...',stderr()); }
+    solObj0 = e$solObj
+    e$solObj = array(0,dim=c(n_matrices,n,m))
+    for (i in 1:n_matrices) e$solObj[i,,] = GetSolution(solObj0,n_rows=n,invrotate=FALSE,lambda=lambdas[i],gamma=opt$gamma)
+  }
+  
+  return(e)
+}
 
 
 
@@ -1785,6 +1897,7 @@ op_domains <- function(cmdline_args)
   # get command line options (if help option encountered print help and exit)
   arguments <- parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf));
   opt <- arguments$options;
+  if (opt$verbose) print_options(opt)
   files <- arguments$args;
   if (length(files)!=1) { write(paste('Usage:',usage),stderr()); quit(save='no'); }
 
@@ -1796,8 +1909,6 @@ op_domains <- function(cmdline_args)
   # parameters  
   bins = as.integer(strsplit(opt$'bins',',')[[1]])
   if (length(bins)==0) { bin_points = c() } else { bin_points = (bins-min(bins))/(max(bins)-min(bins)) }
-  
-  if (opt$verbose) print(opt)
   
   # create output directory
   if (out_dir=="") { write('Error: please specify output directory!',stderr()); quit(save='no'); }
@@ -2001,6 +2112,7 @@ op_domain_diff <- function(cmdline_args)
   # get command line options (if help option encountered print help and exit)
   arguments <- parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf));
   opt <- arguments$options;
+  if (opt$verbose) print_options(opt)
   files <- arguments$args;
   if (length(files)<1) { write(paste('Usage:',usage),stderr()); quit(save='no'); }
 
@@ -2008,7 +2120,6 @@ op_domain_diff <- function(cmdline_args)
   out_dir <- opt$'output-dir'
   bins = as.integer(strsplit(opt$'bins',',')[[1]])
   if (length(bins)==0) { bin_points = c() } else { bin_points = (bins-min(bins))/(max(bins)-min(bins)) }
-  if (opt$verbose) print(opt)
   
   # create output directory
   if (out_dir=="") { write('Error: please specify output directory!',stderr()); quit(save='no') }
@@ -2183,12 +2294,17 @@ op_compare <- function(cmdline_args)
   # process command-line arguments
   option_list <- list(
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
+    make_option(c("-o","--output-file"), default="", help="Output pdf file (required) [default \"%default\"]."),
     make_option(c("--bin-size"), default=0, help="Bin size in nucleotides for RPKB calculation [default \"%default\"]."),
     make_option(c("--bins"), default="", help="Comma-separated list of bins to be included in the snapshot [default \"%default\"]."),
     make_option(c("--min-distance"), default=0, help="Minimum distance in nucleotides [default \"%default\"]."),
-    make_option(c("-o","--output-file"), default="", help="Output pdf file (required) [default \"%default\"].")
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda [default=%default]."),
+    make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda [default=%default]."),
+    make_option(c("--n-lambda"), default=2, help="Number of lambdas [default=%default]."),
+    make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range."),
+    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma [default=%default].")
   );
-  usage = 'hic-matrix.r compare [OPTIONS] ESTIMATED-RDATA-FILE1 ESTIMATED-RDATA-FILE2';
+  usage = 'hic-matrix.r compare [OPTIONS] MATRIX-1 MATRIX-2 (* matrices can be tsv or estimated RData)';
   
   # get command line options (if help option encountered print help and exit)
   arguments <- parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf));
@@ -2207,150 +2323,129 @@ op_compare <- function(cmdline_args)
 
   # Error checking on input arguments
   if (fout=="") { write('Error: please specify output file!',stderr()); quit(save='no'); }
-  fout2 = paste(fout,'.RData',sep='');
-  fout3 = paste(fout,'.cor.pearson.tsv',sep='');
-  fout4 = paste(fout,'.cor.spearman.tsv',sep='');
-  if (length(grep('pdf$',fout))==0) { fout = paste(fout,'.pdf',sep=''); }
   
-  # compute and plot correlations
-  if (opt$verbose) { write("Loading data...",stderr()); }
-  e1 = new.env(); load(f1,e1);
-  e2 = new.env(); load(f2,e2);
-  if (prod(e1$lambdas==e2$lambdas)!=1) { write('Error: different lambda range in the two samples!',stderr()); quit(save='no'); }
-  if (prod(e1$gammas==e2$gammas)!=1) { write('Error: different gamma range in the two samples!',stderr()); quit(save='no'); }
-  if (nrow(e1$y)!=nrow(e2$y)) { write('Error: different matrix sizes in samples!',stderr()); quit(save='no'); }
-  if (e1$opt$preprocess!=e2$opt$preprocess) { write('Error: the two matrices have been estimated using a different preprocessing method!',stderr()); quit(save='no'); }
-  if (tolower(e1$opt$algorithm)!=tolower(e2$opt$algorithm)) { write('Error: the two matrices have been estimated using a different method!',stderr()); quit(save='no'); }
-  n_lambda = n_matrices = length(e1$lambdas);
-  lambdas = e1$lambdas
-  gammas = e1$gammas
-  ignored_rows = sort(unique(c(e1$ignored_rows,e2$ignored_rows)))
-  ignored_cols = sort(unique(c(e1$ignored_cols,e2$ignored_cols)))
-  n_rows = ncol(e1$y)
-  
-  # determine off-diagonal distances
-  max_dist = n_rows
-  if (tolower(e1$opt$algorithm)=='fused2dzone_flsa') {
-    if (e1$opt$'zone-size'!=e2$opt$'zone-size') { write('Error: the two matrices have been estimated using a different zone size!',stderr()); quit(save='no'); }
-    max_dist = as.integer(e1$opt$'zone-size')
-  }
-  a = c(1.0)   #c(0.5,1.0)
-  distances = unique(as.integer(a*max_dist))
-  
-  # open output PDF file
-  pdf(fout);
-  
-  # plot correlations
-  if (opt$verbose) { write("Computing/plotting correlations...",stderr()); }
-  par(mfrow=c(2,2));
-  c_pearson = c_spearman = matrix(0,length(distances),n_matrices)
-  rownames(c_pearson) = rownames(c_spearman) = distances
-  c_pearson = compare_matrices(e1$solObj,e2$solObj,distances=distances,method='pearson',verbose=TRUE)
-  c_spearman = compare_matrices(e1$solObj,e2$solObj,distances=distances,method='spearman',verbose=TRUE)
-  xaxis_n = n_lambda;
-  xaxis_values = e1$lambdas;
-  xaxis_label = 'lambda';
-  q = unique(as.integer(seq(1,xaxis_n,length.out=10)))
-  qlab = round(xaxis_values[q],2);
-  legend_pos = "bottomleft"
-  plot_matrix(c_pearson,main='Pearson correlation',xlab=xaxis_label,ylab='correlation',q=q,qlab=qlab,legend_pos=legend_pos)
-  plot_matrix(c_spearman,main='Spearman correlation',xlab=xaxis_label,ylab='correlation',q=q,qlab=qlab,legend_pos=legend_pos)
-  
-  # plot degrees of freedom
-  if (opt$verbose) { write("Computing/plotting degrees of freedom...",stderr()); }
-  par(mfrow=c(2,2));
-  N = sum(abs(row(e1$y)-col(e1$y))<=max_dist);
-  tolerance = 0;                     # TODO: make this a parameter?
-  df1 = df2 = rep(0,n_matrices)
-  for (k in 1:n_matrices) {  
-    if (opt$verbose) { write(paste('-- matrices #',k,sep=''),stderr()); }
-    df1[k] = CalcDF(e1$solObj[k,,],distance=max_dist,tolerance=tolerance*mean(e1$solObj[k,,]))
-    df2[k] = CalcDF(e2$solObj[k,,],distance=max_dist,tolerance=tolerance*mean(e2$solObj[k,,]))
-  }
-  plot(df1,type='l',col='red',xlab=xaxis_label,ylab='degrees of freedom',xaxt='n',ylim=c(0,max(df1,df2))); lines(df2,col='green4'); axis(1,at=q,qlab);
-  legend('topright',c('matrix1','matrix2'),pch=16,col=c('red','green4'),inset=0.05);
-  plot(df1/N,type='l',col='red',xlab=xaxis_label,ylab='degrees of freedom (normalized)',xaxt='n',ylim=c(0,1)); lines(df2/N,col='green4'); axis(1,at=q,qlab);
-  legend('topright',c('matrix1','matrix2'),pch=16,col=c('red','green4'),inset=0.05);
-  
-  # find optimal lambda and print results
-  if (opt$verbose) { write("Finding optimal lambda...",stderr()); }
-  fdiff = function(x) { x[-1]-x[-length(x)] }
-  df1_diff = fdiff(df1)
-  df2_diff = fdiff(df2)
-  plot(df1_diff,type='l',col='red',xlab=xaxis_label,ylab='df diff',xaxt='n',ylim=c(min(df1_diff,df2_diff),max(df1_diff,df2_diff))); lines(df2_diff,col='green4'); axis(1,at=q,qlab)
-  optimal1 = 1 + order(df1_diff)[1]    # Finds maximum drop in df1
-  optimal2 = 1 + order(df2_diff)[1]    # Finds maximum drop in df2
-  optimal = min(optimal1,optimal2);
-  write(paste('Correlations of matrices for lambda=',lambdas[1],sep=''),file=stdout())
-  write(c(c_pearson[,1],c_spearman[,1]),file=stdout())
-  write(paste('Correlations of matrices for optimal lambda=',lambdas[optimal],': ',sep=''),file=stdout())
-  write(c(c_pearson[,optimal],c_spearman[,optimal]),file=stdout())
+  ext = sub("^.*[.]","",f1)
+  if (ext=="RData") {
+    # compute and plot correlations
+    if (opt$verbose) { write("Loading data...",stderr()); }
+    e1 = ExtractEstimations(f1,opt)
+    e2 = ExtractEstimations(f2,opt)
+    if (prod(e1$lambdas==e2$lambdas)!=1) { write('Error: different lambda range in the two samples!',stderr()); quit(save='no'); }
+    if (prod(e1$gammas==e2$gammas)!=1) { write('Error: different gamma range in the two samples!',stderr()); quit(save='no'); }
+    if (nrow(e1$y)!=nrow(e2$y)) { write('Error: different matrix sizes in samples!',stderr()); quit(save='no'); }
+    if (e1$opt$preprocess!=e2$opt$preprocess) { write('Error: the two matrices have been estimated using a different preprocessing method!',stderr()); quit(save='no'); }
+    if (tolower(e1$opt$algorithm)!=tolower(e2$opt$algorithm)) { write('Error: the two matrices have been estimated using a different method!',stderr()); quit(save='no'); }
+    n_lambda = n_matrices = length(e1$lambdas);
+    lambdas = e1$lambdas
+    gammas = e1$gammas
+    ignored_rows = unique(c(e1$ignored_rows,e2$ignored_rows))
+    ignored_cols = unique(c(e1$ignored_cols,e2$ignored_cols))
 
-  # plot value of objective function
-  if (length(lambdas)>1) {
-    if (opt$verbose) { write("Computing penalty-vs-loss ratios...",stderr()); }
-    objf1 = rep(0,length(lambdas));
-    objf2 = rep(0,length(lambdas));
-    for (i in 1:length(lambdas)) {  
-      if (opt$verbose) { write(paste('-- matrices #',i,sep=''),stderr()); }
-      objf1[i] = CalcPenaltyLossRatio(e1$y,e1$solObj[i,,],lambdas[i],gammas);
-      objf2[i] = CalcPenaltyLossRatio(e2$y,e2$solObj[i,,],lambdas[i],gammas);
+    # determine off-diagonal distances
+    max_dist = ncol(e1$y)
+    if ((tolower(e1$opt$algorithm)=='fused2dzone_flsa')||(tolower(e1$opt$algorithm)=='fused1dzone_flsa')) {
+      if (e1$opt$'zone-size'!=e2$opt$'zone-size') { write('Error: the two matrices have been estimated using a different zone size!',stderr()); quit(save='no'); }
+      max_dist = as.integer(e1$opt$'zone-size')
     }
-    ymax = max(max(objf1,na.rm=TRUE),max(objf2,na.rm=TRUE));
-    plot(objf1,type='l',col='red',xlab=xaxis_label,ylab='penalty-vs-loss ratio',xaxt='n',ylim=c(0,ymax)); lines(objf2,col='green4'); axis(1,at=q,qlab);
-  }
-  
-  # page 3+: contact maps
-skipped_section = function() 
-{
-  # TODO: this section is skipped because it is not yet adapted for distance-restricted matrices
-  if (opt$verbose) { write("Plotting contact maps...",stderr()); }
+    a = c(1.0)   #c(0.5,1.0)
+    distances = unique(as.integer(a*max_dist))
 
-  i_sampled = as.integer(seq(1,n_rows,length.out=200));   # sample matrix for heatmap generation
-  if (length(bins)>0) {
-    i_focused = max(1,min(bins)):min(n_rows,max(bins))
-    bin_points = (bins-min(bins))/(max(bins)-min(bins))
-    bin_points = bin_points[-length(bin_points)]
-    bin_points = bin_points[-1]
+    # open output PDF file
+    pdf(paste(fout,'.pdf',sep=''));
+  
+    # plot correlations
+    if (opt$verbose) { write("Computing/plotting correlations...",stderr()); }
+    par(mfrow=c(2,2));
+    c_pearson = c_spearman = matrix(0,length(distances),n_matrices)
+    rownames(c_pearson) = rownames(c_spearman) = distances
+    c_pearson = compare_matrices(e1$solObj,e2$solObj,distances=distances,method='pearson',verbose=TRUE)
+    c_spearman = compare_matrices(e1$solObj,e2$solObj,distances=distances,method='spearman',verbose=TRUE)
+    xaxis_n = n_lambda;
+    xaxis_values = e1$lambdas;
+    xaxis_label = 'lambda';
+    q = unique(as.integer(seq(1,xaxis_n,length.out=10)))
+    qlab = round(xaxis_values[q],2);
+    legend_pos = "bottomleft"
+    plot_matrix(c_pearson,main='Pearson correlation',xlab=xaxis_label,ylab='correlation',q=q,qlab=qlab,legend_pos=legend_pos)
+    plot_matrix(c_spearman,main='Spearman correlation',xlab=xaxis_label,ylab='correlation',q=q,qlab=qlab,legend_pos=legend_pos)
+  
+    # plot degrees of freedom
+    if (opt$verbose) { write("Computing/plotting degrees of freedom...",stderr()); }
+    par(mfrow=c(2,2));
+    N = sum(abs(row(e1$y)-col(e1$y))<=max_dist);
+    tolerance = 0;                     # TODO: make this a parameter?
+    df1 = df2 = rep(0,n_matrices)
+    for (k in 1:n_matrices) {  
+      if (opt$verbose) { write(paste('-- matrices #',k,sep=''),stderr()); }
+      df1[k] = CalcDF(e1$solObj[k,,],distance=max_dist,tolerance=tolerance*mean(e1$solObj[k,,]))
+      df2[k] = CalcDF(e2$solObj[k,,],distance=max_dist,tolerance=tolerance*mean(e2$solObj[k,,]))
+    }
+    plot(df1,type='l',col='red',xlab=xaxis_label,ylab='degrees of freedom',xaxt='n',ylim=c(0,max(df1,df2))); lines(df2,col='green4'); axis(1,at=q,qlab);
+    legend('topright',c('matrix1','matrix2'),pch=16,col=c('red','green4'),inset=0.05);
+    plot(df1/N,type='l',col='red',xlab=xaxis_label,ylab='degrees of freedom (normalized)',xaxt='n',ylim=c(0,1)); lines(df2/N,col='green4'); axis(1,at=q,qlab);
+    legend('topright',c('matrix1','matrix2'),pch=16,col=c('red','green4'),inset=0.05);
+  
+    # find optimal lambda and print results
+    if (opt$verbose) { write("Finding optimal lambda...",stderr()); }
+    fdiff = function(x) { x[-1]-x[-length(x)] }
+    df1_diff = fdiff(df1)
+    df2_diff = fdiff(df2)
+    plot(df1_diff,type='l',col='red',xlab=xaxis_label,ylab='df diff',xaxt='n',ylim=c(min(df1_diff,df2_diff),max(df1_diff,df2_diff))); lines(df2_diff,col='green4'); axis(1,at=q,qlab)
+    optimal1 = 1 + order(df1_diff)[1]    # Finds maximum drop in df1
+    optimal2 = 1 + order(df2_diff)[1]    # Finds maximum drop in df2
+    optimal = min(optimal1,optimal2);
+    write(paste('Correlations of matrices for lambda=',lambdas[1],sep=''),file=stdout())
+    write(c(c_pearson[,1],c_spearman[,1]),file=stdout())
+    write(paste('Correlations of matrices for optimal lambda=',lambdas[optimal],': ',sep=''),file=stdout())
+    write(c(c_pearson[,optimal],c_spearman[,optimal]),file=stdout())
+
+    # plot value of objective function
+    if (length(lambdas)>1) {
+      if (opt$verbose) { write("Computing penalty-vs-loss ratios...",stderr()); }
+      objf1 = rep(0,length(lambdas));
+      objf2 = rep(0,length(lambdas));
+      for (i in 1:length(lambdas)) {  
+        if (opt$verbose) { write(paste('-- matrices #',i,sep=''),stderr()); }
+        objf1[i] = CalcPenaltyLossRatio(e1$y,e1$solObj[i,,],lambdas[i],gammas);
+        objf2[i] = CalcPenaltyLossRatio(e2$y,e2$solObj[i,,],lambdas[i],gammas);
+      }
+      ymax = max(max(objf1,na.rm=TRUE),max(objf2,na.rm=TRUE));
+      plot(objf1,type='l',col='red',xlab=xaxis_label,ylab='penalty-vs-loss ratio',xaxt='n',ylim=c(0,ymax)); lines(objf2,col='green4'); axis(1,at=q,qlab);
+    }  
+    dev.off();
+
+    # save correlation matrices  
+    if (opt$verbose) { write("Saving correlation matrices...",stderr()); }
+    Cout = cbind(lambdas,t(c_pearson))
+    colnames(Cout)[1] = 'lambda'
+    write.table(Cout,quote=F,row.names=F,sep='\t',file=paste(fout,'.cor.pearson.tsv',sep=''));
+    Cout = cbind(lambdas,t(c_spearman))
+    colnames(Cout)[1] = 'lambda'
+    write.table(Cout,quote=F,row.names=F,sep='\t',file=paste(fout,'.cor.spearman.tsv',sep=''));
+  
+    # save
+    if (opt$verbose) { write("Saving data...",stderr()); }
+    save(lambdas,gammas,c_pearson,c_spearman,df1,df2,objf1,objf2,optimal,file=paste(fout,'.RData',sep=''));
+
   } else {
-    i_focused = as.integer(seq(max(1,n_rows-10000000/bin_size),n_rows,length.out=200))
-    bin_points = c()
-  }
+    # assume matrices are in tsv format
+    mat1 = as.matrix(read.table(files[1]))
+    mat2 = as.matrix(read.table(files[2]))
+    if (nrow(mat1)!=nrow(mat2)) { write('Error: different matrix sizes in samples!',stderr()); quit(save='no'); }
 
-  D = abs(row(e1$x)-col(e1$x))
-  for (k in 1:xaxis_n) {
-    par(mfrow=c(3,2),mar=c(1,2,1,2))
-    b1 = e1$solObj[k,,]; b1[b1<0] = 0
-    b2 = e2$solObj[k,,]; b2[b2<0] = 0
-    if ((bin_size>0)&(min_dist>0)) {
-      b1[D*bin_size<min_dist] = 0
-      b2[D*bin_size<min_dist] = 0
+    # replace NAs with 0
+    mat1[is.na(mat1)] = 0
+    mat2[is.na(mat2)] = 0
+
+    # compute correlations
+    for (m in c("pearson","spearman")) {
+      c = cor(as.vector(mat1),as.vector(mat2),method=m)
+      x = cbind("0",c)
+      colnames(x) = c("lambda","correlation")
+      write.table(x,quote=FALSE,row.names=FALSE,sep='\t',file=paste(fout,'.cor.',m,'.tsv',sep=''))
     }
-    if (e1$opt$preprocess=='none') { b1 = log2(b1); b2 = log2(b2); }
-    zlim = c(0,max(b1,b2))
-    image(b1[i_sampled,i_sampled],main=paste("matrix1 (",xaxis_label,"=",xaxis_values[k],")",sep=''),xaxt='n',yaxt='n',zlim=zlim)
-    image(b2[i_sampled,i_sampled],main=paste("matrix2 (",xaxis_label,"=",xaxis_values[k],")",sep=''),xaxt='n',yaxt='n',zlim=zlim)
-    image(b1[i_focused,i_focused],main=paste("matrix1 zoom-in (",xaxis_label,"=",xaxis_values[k],")",sep=''),xaxt='n',yaxt='n',zlim=zlim)
-    image(b2[i_focused,i_focused],main=paste("matrix2 zoom-in (",xaxis_label,"=",xaxis_values[k],")",sep=''),xaxt='n',yaxt='n',zlim=zlim)
-    boxplot(b1[b1>0],b2[b2>0],main='Boxplot of matrix values',ylab='HiC score')
   }
-}
-
-  dev.off();
-
-  # save correlation matrices  
-  if (opt$verbose) { write("Saving correlation matrices...",stderr()); }
-  Cout = cbind(lambdas,t(c_pearson))
-  colnames(Cout)[1] = 'lambda'
-  write.table(Cout,quote=F,row.names=F,sep='\t',file=fout3);
-  Cout = cbind(lambdas,t(c_spearman))
-  colnames(Cout)[1] = 'lambda'
-  write.table(Cout,quote=F,row.names=F,sep='\t',file=fout4);
   
-  # save
-  if (opt$verbose) { write("Saving data...",stderr()); }
-  save(lambdas,gammas,c_pearson,c_spearman,df1,df2,objf1,objf2,optimal,file=fout2);
-
   # done
   if (opt$verbose) { write("Done.",stderr()); }
   quit(save='no');

@@ -7,12 +7,24 @@ tracks
 
 matrix-filtered
 
-matrix-scaled
+matrix-prep
 
 matrix-ic
 
 matrix-estimated
 
+matrix-stats
+
+compare-matrices
+compare-matrices-stats
+
 domains
+
+compare-boundaries
+compare-boundaries-stats
+
+hicplotter
+
+interactions
 
 annotations
