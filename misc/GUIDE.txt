@@ -1,3 +1,5 @@
 # start a new project
 ~/pipeline-master/code/code.main/pipeline-new-analysis chipseq-standard ~/projects/SmithLab-Researcher-ChIPSeq-2015-11-12
 
+# set the input file location (fastq.gz files from a sequencing project)
+
