@@ -2,7 +2,7 @@
 source ./code/code.main/custom-tcshrc    # customize shell environment
 
 ##
-## USAGE: chipseq-fingerprint.tcsh OUTPUT-DIR PARAMETER-SCRIPT ALIGNMENT-BRANCH SAMPLES
+## USAGE: chipseq-fingerprint.tcsh OUTPUT-DIR PARAMETER-SCRIPT ALIGNMENT-BRANCH OBJECTS
 ##
 
 # process command-line inputs

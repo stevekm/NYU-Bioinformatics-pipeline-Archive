@@ -34,7 +34,7 @@ foreach f (`cd $branch/$object1; ls -1 matrix.*.tsv matrix.*.RData | grep -vwE "
   set chr = `echo $f | cut -d'.' -f2`
   scripts-send2err "Processing matrix $f..."
   if ((-e $branch/$object1/$f) && (-e $branch/$object2/$f)) then
-    Rscript ./code/hic-matrix.r compare -v -o $outdir/$chr $compare_params $branch/$object1/$f $branch/$object2/$f 
+    Rscript ./code/hic-matrix.r compare -v -o $outdir/$chr $compare_params $branch/$object1/$f $branch/$object2/$f             # TODO: use scripts-qsub-run to assign memory
   endif
 end
 

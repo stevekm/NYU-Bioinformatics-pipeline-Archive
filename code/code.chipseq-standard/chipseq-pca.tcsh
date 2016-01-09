@@ -35,19 +35,9 @@ scripts-create-path $outdir/
 # -----  MAIN CODE BELOW --------------
 # -------------------------------------
 
-# process sample sheet
-set group_column = `cat $sheet | head -1 | tr '\t' '\n' | grep -n '^group$' | cut -d':' -f1`
-set groups_noinput = `cat $sheet | sed '1d' | cut -f$group_column | sort -u | grep -vwi input`
-if ($#groups_noinput == 0) then
-  set awk_filter = '$0'                        # include inputs only if no more than one group (besides inputs) is available
-else
-  set awk_filter = 'tolower($2)!~/input/'      # remove all inputs from PCA
-  scripts-send2err "Warning: Excluding all Inputs from PCA."
-endif
-
 # determine labels and matrices
-set labels = `cat $sheet | sed '1d' | cut -f1,$group_column | awk $awk_filter | awk '{print $2":"$1}'`
-set matrices = `cat $sheet | sed '1d' | cut -f1,$group_column | awk $awk_filter | cut -f1 | awk -v pref=$branch '{print pref"/"$1"/matrix.tsv"}'`
+set matrices = `./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk -v pref=$branch '{print pref"/"$1"/matrix.tsv"}'`
+set labels = `./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk '{print $2":"$1}'`
 
 # run PCA
 echo $labels | tr ' ' '\n' >! $outdir/labels.tsv
