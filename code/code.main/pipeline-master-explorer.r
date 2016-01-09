@@ -145,7 +145,8 @@ option_list <- list(
   make_option(c("-S","--sample-sheet"), default="inputs/sample-sheet.tsv", help="Sample sheet file name (required) [default \"%default\"]."),
   make_option(c("-F","--filter-branch"), default="", help="Regular expression for filtering input branches [default \"%default\"]."),
   make_option(c("--exclude-branch"), default="", help="Regular expression for excluding input branches [default \"%default\"]."),
-  make_option(c("--exclude-obj"), default="", help="Regular expression for excluding input objects [default \"%default\"].")
+  make_option(c("--exclude-obj"), default="", help="Regular expression for excluding input objects [default \"%default\"]."),
+  make_option(c("--exclude-outdir"), default="", help="Regular expression for excluding output directories [default \"%default\"].")
 )
   
 # get command line options (if help option encountered print help and exit)
@@ -251,6 +252,13 @@ if (opt$verbose) write("Generating output branches and directories...",stderr())
 ignore_group = out_obj_vars=="*"
 obj_db = cbind(obj_db,"out-branch"=create_out_branch(obj_db,ignore_group=ignore_group))                                               # add output branch
 obj_db = cbind(obj_db,"out-dir"=create_out_dir(obj_db))                                                                               # add output directory
+
+# filter output directories
+if (opt$verbose) write("Filtering output directories...",stderr())
+if (opt$"exclude-outdir"!="") {
+  selected = grep(opt$"exclude-outdir",obj_db[,"out-dir"],ignore.case=TRUE,invert=TRUE)
+  if (length(selected)>0) { obj_db = obj_db[selected,,drop=FALSE] } else { obj_db = c() }
+}
 
 # check out-dir status (missing inputs, exists, up-to-date)
 if (opt$verbose) write("Checking input/output object status...",stderr())

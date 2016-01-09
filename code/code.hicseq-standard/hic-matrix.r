@@ -1758,6 +1758,10 @@ ExtractEstimations = function(filename, opt)
     solObj0 = e$solObj
     e$solObj = array(0,dim=c(n_matrices,n,m))
     for (i in 1:n_matrices) e$solObj[i,,] = GetSolution(solObj0,n_rows=n,invrotate=FALSE,lambda=lambdas[i],gamma=opt$gamma)
+
+  } else {
+    write("Warning: specific lambdas/gammas are ignored (only applicable if estimated max-lambda was set to Inf)!",stderr())    
+
   }
   
   return(e)
@@ -2298,11 +2302,11 @@ op_compare <- function(cmdline_args)
     make_option(c("--bin-size"), default=0, help="Bin size in nucleotides for RPKB calculation [default \"%default\"]."),
     make_option(c("--bins"), default="", help="Comma-separated list of bins to be included in the snapshot [default \"%default\"]."),
     make_option(c("--min-distance"), default=0, help="Minimum distance in nucleotides [default \"%default\"]."),
-    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda [default=%default]."),
-    make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda [default=%default]."),
-    make_option(c("--n-lambda"), default=2, help="Number of lambdas [default=%default]."),
-    make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range."),
-    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma [default=%default].")
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--n-lambda"), default=2, help="Number of lambdas (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range (only applicable if estimated max-lambda was set to Inf)."),
+    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma (only applicable if estimated max-lambda was set to Inf) [default=%default].")
   );
   usage = 'hic-matrix.r compare [OPTIONS] MATRIX-1 MATRIX-2 (* matrices can be tsv or estimated RData)';
   

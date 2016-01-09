@@ -235,7 +235,7 @@ Output files:\
   # profiles
   if (opt$verbose) { write('Creating profiles...',stderr()); }
   centers = {}        # cluster centers by sample
-  Z = t(sapply(1:max(Cobj$cluster),function(c) apply(Yfilt[Cobj$cluster==c,],2,mean)))
+  Z = t(sapply(1:max(Cobj$cluster),function(c) apply(Yfilt[Cobj$cluster==c,,drop=FALSE],2,mean)))
   j = 1; for (k in 1:n_matrices) { jj = j+n_bins[k]-1; centers[[k]] = Z[,j:jj,drop=FALSE]; colnames(centers[[k]]) = 1:n_bins[k]; j = jj+1 }
   names(centers) = Xlabels
   m = melt(centers)      # data frame

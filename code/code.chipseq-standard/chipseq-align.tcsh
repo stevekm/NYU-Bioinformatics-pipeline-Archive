@@ -46,18 +46,31 @@ set R1 = `./code/read-sample-sheet.tcsh $sheet $object fastq-r1`
 set R2 = `./code/read-sample-sheet.tcsh $sheet $object fastq-r2 | grep -v '^NA$'`
 if ("$R1" != "") set R1 = `echo $R1 | tr ',' '\n' | awk -v d=$branch '{print d"/"$0}'`
 if ("$R2" != "") set R2 = `echo $R2 | tr ',' '\n' | awk -v d=$branch '{print d"/"$0}'`
+set R1 = `echo $R1 | tr ' ' ','`
+set R2 = `echo $R2 | tr ' ' ','`
 
-if (`echo $R1 | tr ' ' '\n' | grep -c '\.bam$'` == 1) then
+# check file extensions
+set ext = `echo $R1 | tr ',' '\n' | sed 's/\.gz$//' | sed 's/.*\.//' | sort -u`
+if ($#ext > 1) then
+  scripts-send2err "Error: multiple input file types found."
+  exit 1
+else if (($ext != "bam") && ($ext != "fastq")) then
+  scripts-send2err "Error: only fastq and bam files can be used as input files."
+  exit 1
+else if ($ext == "bam") then
   scripts-send2err "Using bam files..."
   set BAM = $R1
   set R1 = 
   set R2 =
+else 
+  scripts-send2err "Using fastq files..."
 endif
 
-if ($R1 != '') then
+# align
+if ("$R1" != '') then
   # run aligner
   scripts-send2err "Aligning reads..."
-  if ($R2 == "") then
+  if ("$R2" == "") then
     set input = "-U $R1"
   else
     set input = "-1 $R1 -2 $R2"
@@ -88,7 +101,7 @@ samtools index $outdir/alignments.bam
 
 # stats
 scripts-send2err "Computing statistics..."
-if ($R1 != '') then
+if ("$R1" != '') then
   set R1_files = `echo $R1 | tr ',' ' '`
   set n_reads = `cat $R1_files | gunzip | grep ^@ | wc -l`
 else

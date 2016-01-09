@@ -35,18 +35,9 @@ scripts-create-path $outdir/
 # -----  MAIN CODE BELOW --------------
 # -------------------------------------
 
-# process sample sheet
-set group_column = `cat $sheet | head -1 | tr '\t' '\n' | grep -n '^group$' | cut -d':' -f1`
-set groups_noinput = `cat $sheet | sed '1d' | cut -f$group_column | sort -u | grep -vwi input`
-if ($#groups_noinput == 0) then
-  set awk_filter = '$0'                        # include inputs only if no more than one group (besides inputs) is available
-else
-  set awk_filter = 'tolower($2)!~/input/'      # remove all inputs from PCA
-  scripts-send2err "Warning: Excluding all Inputs from PCA."
-endif
-
-# create dataset file
-cat $sheet | sed '1d' | cut -f1,$group_column | awk $awk_filter | awk -v pref=$branch '{print $2":"$1"\t"pref"/"$1"/matrix.tsv"}' >! $outdir/dataset.tsv
+# obtain info from sample sheet
+set matrices = `./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk -v pref=$branch '{print pref"/"$1"/matrix.tsv"}'`
+./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk -v pref=$branch '{print $2":"$1"\t"pref"/"$1"/matrix.tsv"}' >! $outdir/dataset.tsv
 
 # create heatmaps
 scripts-heatclustering.r -v -o $outdir $heatmap_params $outdir/dataset.tsv 

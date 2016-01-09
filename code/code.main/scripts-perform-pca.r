@@ -19,7 +19,7 @@ plotPCA <- function(mat,show_text,use_short_names)
   fac = factor(sapply(names,function(x){strsplit(x,':')[[1]][1]}))
   short_names = as.vector(sapply(names,function(x){strsplit(x,':')[[1]][2]}))
   if (show_text) { if (use_short_names) { labels = short_names } else { labels = names } } else { labels = NULL }
-  colours = c(brewer.pal(7,"Set1"),brewer.pal(7,"Set2"),brewer.pal(7,"Set3"))[1:nlevels(fac)]
+  colours = rep(c(brewer.pal(7,"Set1"),brewer.pal(7,"Set2"),brewer.pal(7,"Set3")),nlevels(fac))[1:nlevels(fac)]
 
   F = c(PC2~PC1,PC3~PC2)  #,PC4~PC3,PC5~PC4)
   Fplot = lapply(

@@ -15,15 +15,14 @@ set opt = "$1"
 # setup
 set op = compare-matrices
 set inpdirs = "inpdirs/*"
-set filter = ""
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="
-set resources = 1,60G
+set resources = 1,60G                                                                   # TODO: this should be a function of the matrix sizes...
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/hicseq-$op.tcsh"
 
 # generate run script
-Rscript ./code/code.main/pipeline-master-explorer.r -v -F "$filter" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "genome" "sample" 2
+Rscript ./code/code.main/pipeline-master-explorer.r -v --exclude-branch=".*rotate45.*/" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "genome" "sample" 2
 
 # run and wait until done!
 if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run

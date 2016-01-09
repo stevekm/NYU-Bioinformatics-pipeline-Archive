@@ -18,7 +18,7 @@ set branch = $3
 set objects = ($4)
 
 # if samples is empty, use all objects in the branch
-if ("$objects" == "") set objects = `cd $branch; ls -1d *`     # TODO: currently not used!!!
+if ("$objects" == "") set objects = `cd $branch; ls -1d *`
 
 # read variables from input branch
 source ./code/code.main/scripts-read-job-vars $branch "$objects" "genome genome_dir"

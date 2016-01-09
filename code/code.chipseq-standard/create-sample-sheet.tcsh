@@ -2,18 +2,19 @@
 source ./code/code.main/custom-tcshrc    # customize shell environment
 
 ##
-## USAGE: create-sample-sheet.tcsh GENOME={hg19,mm10}
+## USAGE: create-sample-sheet.tcsh GENOME={hg19,mm10} [FRAGMENTATION-LENGTH=auto]
 ##
 ## FUNCTION: create sample sheet automatically from input files in fastq directory
 ##
 
 # process command-line inputs
-if ($#argv != 1) then
+if ($#argv == 0) then
   grep '^##' $0
   exit
 endif
 
 set genome = $1
+set fraglen = $2
 
 # create sample sheet
 set inpdir = fastq
@@ -35,10 +36,14 @@ foreach sample (`cd $inpdir; ls -1d */*.fastq.gz */*.bam | sed 's/.[^/]\+$//' | 
       set fastq2 = NA
     endif
   endif
-  if (`echo $sample | tr '-' '\n' | grep -iEc '^H2AZ|^H[234]K[0-9]'` == 1) then
-    set frag = 150   # histone
-  else 
-    set frag = 400   # TF
+  if ($fraglen != "") then
+    set frag = $fraglen
+  else
+    if (`echo $sample | tr '-' '\n' | grep -iEc '^H2AZ|^H[234]K[0-9]'` == 1) then
+      set frag = 150   # histone
+    else 
+      set frag = 400   # TF
+    endif
   endif
   echo "$sample\t$control\t$group\t`echo $fastq1 | tr ' ' ','`\t`echo $fastq2 | tr ' ' ','`\t$genome\t$frag" >> $sheet
 end
