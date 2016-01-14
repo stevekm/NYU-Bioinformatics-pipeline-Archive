@@ -35,15 +35,21 @@ scripts-create-path $outdir/
 # -----  MAIN CODE BELOW --------------
 # -------------------------------------
 
+# filter out inputs
+if ($include_input == 'false') set objects = `echo $objects | tr ' ' '\n' | grep -vi input`
+
 # obtain info from sample sheet
 set matrices = `./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk -v pref=$branch '{print pref"/"$1"/matrix.tsv"}'`
 ./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk -v pref=$branch '{print $2":"$1"\t"pref"/"$1"/matrix.tsv"}' >! $outdir/dataset.tsv
 
+# filter reference loci
+cat $matrices | cut -f1 | sort -u | grep -viE "$chrom_excluded" | grep -v '^$' >! $outdir/loci.txt
+
 # create heatmaps
-scripts-heatclustering.r -v -o $outdir $heatmap_params $outdir/dataset.tsv 
+scripts-heatclustering.r -v -o $outdir --row-filter=$outdir/loci.txt $heatmap_params $outdir/dataset.tsv 
 
 # cleanup
-rm -f $outdir/*.RData
+#rm -f $outdir/*.RData
 
 # -------------------------------------
 # -----  MAIN CODE ABOVE --------------
