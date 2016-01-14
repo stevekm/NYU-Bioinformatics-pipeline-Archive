@@ -20,7 +20,12 @@ set fraglen = $2
 set inpdir = fastq
 set sheet = sample-sheet.tsv
 echo "sample control group fastq-r1 fastq-r2 genome fragmentation-size" | tr ' ' '\t' >! $sheet
-foreach sample (`cd $inpdir; ls -1d */*.fastq.gz */*.bam | sed 's/.[^/]\+$//' | sort -u`)
+
+# determine sample names
+set samples = `cd $inpdir; ls -1d */*.fastq.gz */*.bam | sed 's/.[^/]\+$//' | sort -u` 
+
+# import sample information
+foreach sample ($samples)
   scripts-send2err "Importing sample $sample..."
   set control = NA                                    # this should be filled in manually
   set group = `echo $sample | cut -d'-' -f-3`
@@ -36,7 +41,7 @@ foreach sample (`cd $inpdir; ls -1d */*.fastq.gz */*.bam | sed 's/.[^/]\+$//' | 
       set fastq2 = NA
     endif
   endif
-  if ($fraglen != "") then
+  if (($fraglen != "") || ($fraglen != "auto")) then
     set frag = $fraglen
   else
     if (`echo $sample | tr '-' '\n' | grep -iEc '^H2AZ|^H[234]K[0-9]'` == 1) then

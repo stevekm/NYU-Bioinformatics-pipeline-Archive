@@ -35,6 +35,9 @@ scripts-create-path $outdir/
 # -----  MAIN CODE BELOW --------------
 # -------------------------------------
 
+# filter out inputs
+if ($include_input == 'false') set objects = `echo $objects | tr ' ' '\n' | grep -vi input`
+
 # determine labels and matrices
 set matrices = `./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk -v pref=$branch '{print pref"/"$1"/matrix.tsv"}'`
 set labels = `./code/read-sample-sheet.tcsh $sheet "$objects" $group yes | awk '{print $2":"$1}'`

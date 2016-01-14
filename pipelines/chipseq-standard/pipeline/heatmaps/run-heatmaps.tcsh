@@ -24,7 +24,7 @@ set resources = 1
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/chipseq-$op.tcsh"
 
 # generate run script
-Rscript ./code/code.main/pipeline-master-explorer.r -v -F "$filter" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "*" 1
+Rscript ./code/code.main/pipeline-master-explorer.r -v --filter-branch="$filter" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "*" 1
 
 # run and wait until done!
 if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run

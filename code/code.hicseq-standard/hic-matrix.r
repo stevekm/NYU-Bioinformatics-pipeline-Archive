@@ -1550,7 +1550,7 @@ op_matrices <- function(cmdline_args)
 
   # create output directory
   if (out_dir=="") { write('Error: please specify output directory!',stderr()); quit(save='no'); }
-  if (file.exists(out_dir)==FALSE) { dir.create(out_dir) } else { write('Error: output directory already exists!',stderr()); quit(save='no'); }
+  if (file.exists(out_dir)==FALSE) { dir.create(out_dir) } else { write('Warning: output directory already exists!',stderr()) }
 
   # load estimated matrices (RData file)
   if (opt$verbose) write("Loading data...",stderr())
@@ -1583,7 +1583,7 @@ op_matrices <- function(cmdline_args)
     n_matrices = dim(e$solObj)[1]
     for (k in 1:n_matrices) {
       z = e$solObj[k,,]
-      if (invrotate==TRUE) return(MatrixInverseRotate45(z))
+      if (invrotate==TRUE) z = MatrixInverseRotate45(z)
       rownames(z) = rownames(e$y)
       colnames(z) = colnames(e$y)
       fout = paste(out_dir,'/matrix.k=',formatC(k,width=3,format='d',flag='0'),'.tsv',sep='')

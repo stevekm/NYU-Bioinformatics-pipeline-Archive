@@ -1,6 +1,6 @@
 #!/bin/sh
 
-find . -name 'job.*' -print0 | xargs -0 grep -iE 'usage|error|segmentation|not found|join.*sort|no such file|syntax|terminate' 1>&2
+find . -name 'job.*' -print0 | xargs -0 grep -iE 'usage|error|segmentation|not found|join.*sort|no such file|syntax|terminate|: no match' 1>&2
 
 
 

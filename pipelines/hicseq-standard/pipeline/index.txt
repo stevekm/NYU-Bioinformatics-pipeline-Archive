@@ -23,6 +23,8 @@ domains
 compare-boundaries
 compare-boundaries-stats
 
+diff-domains
+
 hicplotter
 
 interactions
