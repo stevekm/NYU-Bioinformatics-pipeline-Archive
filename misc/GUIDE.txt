@@ -24,3 +24,10 @@ start this from the project parent dir, or wherever you want the record file to 
 # set read permissions for project directory 
 chmod go=u -R ~/projects/ProjDir
 chmod go-w -R ~/projects/ProjDir
+
+might need the binaries; 
+```
+mkdir <project-dir>/code.repo/bin
+ln -s /ifs/home/at570/disk1/Resources/Code/pipelines-repo/code/bin/* code.repo/bin/
+
+```
