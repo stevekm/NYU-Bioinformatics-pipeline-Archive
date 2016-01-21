@@ -31,3 +31,6 @@ mkdir <project-dir>/code.repo/bin
 ln -s /ifs/home/at570/disk1/Resources/Code/pipelines-repo/code/bin/* code.repo/bin/
 
 ```
+
+if it broke, clean up with 
+code/clean-all
