@@ -93,7 +93,7 @@ layout(Raw_Reads_Matrix_matrix) # setup the panel layout
 par(mar=c(0,0,4,0)) # need to set this for some reason
 plot(1,type='n',axes=FALSE,xlab="",ylab="",main = "Sequencing Reads",cex.main=2) # call blank plot to fill the first panel
 legend("bottom",legend=c("Deduplicated","Duplicated","Unaligned"),fill=BARPLOT_COLORS,bty = "n",ncol=length(BARPLOT_COLORS),cex=1.0) # set up the Legend in the first panel
-par(mar=c(6,8,0,3))
+par(mar=c(6,max(4.1,max(nchar(row.names(AlignmentStats)))/2.5),0,3)) # plot margins # c(bottom, left, top, right) # default is c(5, 4, 4, 2) + 0.1
 barplot(Dup_Raw_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Number of reads (millions)") # create barplot for the two matrices
 barplot(Dup_Pcnt_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Percent of reads")
 dev.off()
