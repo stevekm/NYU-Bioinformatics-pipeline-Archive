@@ -642,7 +642,7 @@ op_estimate <- function(cmdline_args)
       }
       x = MatrixRotate45(x,zone_size)       # replace input matrix with rotated version
       y = MatrixRotate45(y,zone_size)       # replace preprocessed input matrix with rotated version
-      ignored_cols = c()
+      ignored_cols = integer(0)
     }
     
     # if 1D, then convert to vector
@@ -1771,23 +1771,47 @@ ExtractEstimations = function(filename, opt)
 
 ###### LoadEstimation
 
-LoadEstimation = function(filename, options)
+LoadEstimation = function(filename, options, replace.na)
 {
   est = {}
   ext = strsplit(filename,'.*[.]')[[1]][2]
-  if (ext=="RData") {
-    load(filename)
-    est$lambdas = lambdas
+  if (ext=="RData") {                                 # get estimated matrices from RData file
+    load(filename)  
     est$x = x
     est$y = y
-    est$solObj = solObj
     est$ignored_rows = sort(unique(ignored_rows))
-    est$ignored_cols = sort(unique(ignored_cols))
-  } else {
+    est$ignored_cols = sort(unique(ignored_cols))     # TODO: ignored_cols is set to NULL, produces warning
+    if (opt$"max-lambda"==Inf) {                      # extract specific lambdas (found in options) if max-lambda=Inf
+      # create gamma/lambda values (zero always included if log2 scale)
+      est$gammas = opt$gammas
+      if (options$"log2-lambda"==FALSE) { lambdas = unique(seq(options$"min-lambda",options$"max-lambda",length.out=options$"n-lambda"))
+      } else { lambdas = unique(c(0,2^seq(log2(max(options$"min-lambda",0.01)),log2(options$"max-lambda"),length.out=options$"n-lambda"-1))) }
+      est$lambdas = lambdas
+      
+      # create new estimated matrices for specific lambdas/gammas
+      if (options$verbose) write('Loading matrices estimated for specific lambdas/gammas...',stderr())
+      n_matrices = length(lambdas)
+      est$solObj = array(0,dim=c(n_matrices,dim(y)))
+      for (k in 1:n_matrices) est$solObj[k,,] = GetSolution(solObj,n_rows=nrow(y),invrotate=FALSE,lambda=lambdas[k],gamma=options$gamma)
+
+    } else {                                         # keep original lambdas
+      est$gammas = gammas
+      est$lambdas = lambdas
+      est$solObj = solObj
+    }
+    
+  } else {                                            # if input is tsv, then do all necessary formatting and preprocessing
     # read matrix from text file
     if (options$'row-labels'==TRUE) { est$x = as.matrix(read.table(filename,check.names=F,row.names=1))
     } else { est$x = as.matrix(read.table(filename,check.names=F,row.names=NULL)) }
-    
+
+    # set lambdas/gammas
+    est$gammas = 0
+    est$lambdas = 0
+        
+    # replace NAs with 0
+    if (replace.na==TRUE) est$x[is.na(est$x)] = 0
+
     # set ignored rows/columns to zero
     est$ignored_rows = integer(0)
     est$ignored_cols = integer(0)
@@ -1800,11 +1824,11 @@ LoadEstimation = function(filename, options)
       est$x[est$ignored_rows,] = 0
       est$x[,est$ignored_cols] = 0
     }
+
     # preprocess input matrix
     est$y = PreprocessMatrix(est$x,preprocess=options$preprocess,pseudo=1,cutoff=1)
     est$solObj = array(0,dim=c(1,dim(est$x)[1],dim(est$x)[2]))
     est$solObj[1,,] = est$y
-    est$lambdas = 0
   }
 
   # create submatrix
@@ -1882,6 +1906,11 @@ op_domains <- function(cmdline_args)
   option_list <- list(
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
     make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"]."),
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--n-lambda"), default=2, help="Number of lambdas (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range (only applicable if estimated max-lambda was set to Inf)."),
+    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
     make_option(c("--row-labels"), action="store_true",default=FALSE, help="Input matrix has row labels"),
     make_option(c("--ignored-loci"), default="", help="Ignored row and column names found in this list (not required) [default=\"%default\"]."),
     make_option(c("--preprocess"), default="none", help="Matrix preprocessing: none (default), max, mean, log2, log2mean, rank, dist, distlog2."),
@@ -1920,7 +1949,7 @@ op_domains <- function(cmdline_args)
 
   # load data
   if (opt$verbose) write("Loading data...",stderr())
-  est = LoadEstimation(f,opt)
+  est = LoadEstimation(f,opt,replace.na=TRUE)
   if (is.null(est$lambdas)==TRUE) { write("Error: maximum lambda cannot be infinite, use the 'extract' operation to select specific lambdas.",stderr()); quit(save='no') }
 
   # compute boundary scores
@@ -2098,6 +2127,11 @@ op_domain_diff <- function(cmdline_args)
     make_option(c("-v","--verbose"), action="store_true",default=FALSE, help="Print more messages."),
     make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"]."),
     make_option(c("--row-labels"), action="store_true",default=FALSE, help="Input matrix has row labels"),
+    make_option(c("--min-lambda"), default=0.0, help="Minimum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--n-lambda"), default=2, help="Number of lambdas (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range (only applicable if estimated max-lambda was set to Inf)."),
+    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
     make_option(c("--ignored-loci"), default="", help="Ignored row and column names found in this list (not required) [default=\"%default\"]."),
     make_option(c("--preprocess"), default="none", help="Matrix preprocessing: none (default), max, mean, log2, log2mean, rank, dist, distlog2."),
     make_option(c("--distance"), default=5, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
@@ -2134,7 +2168,7 @@ op_domain_diff <- function(cmdline_args)
 	dom = {}
 	for (f in 1:length(files)) { 
     if (opt$verbose) write(paste('Loading input matrix ',files[f],'...',sep=''),stderr())
-	  est[[f]] = LoadEstimation(files[[f]],opt)
+	  est[[f]] = LoadEstimation(files[[f]],opt,replace.na=TRUE)
 	  if (is.null(est[[f]]$lambdas)==TRUE) { 
 	    write("Error: maximum lambda cannot be infinite, use the 'extract' operation to select specific lambdas.",stderr())
 	    quit(save='no') 
@@ -2179,7 +2213,7 @@ op_domain_diff <- function(cmdline_args)
 		for (f in 1:length(files)) { table = cbind(table,round(scores[[f]],4)); colnames(table)[ncol(table)] = paste('lmax-score-sample-',f,sep='') }
 		for (f in 1:length(files)) { table = cbind(table,round(scores0[[f]],4)); colnames(table)[ncol(table)] = paste('lmax-score0-sample-',f,sep='') }
 		write.table(table,col.names=T,row.names=F,quote=F,sep='\t',file=paste(out_dir,'/table.k=',formatC(ll,width=3,format='d',flag='0'),'.tsv',sep=''))
-		save(opt,dom,scores,lmax,d,d2,file=paste(out_dir,'/diff.k=',formatC(ll,width=3,format='d',flag='0'),'.RData',sep=''))
+		#save(opt,dom,scores,lmax,d,d2,file=paste(out_dir,'/diff.k=',formatC(ll,width=3,format='d',flag='0'),'.RData',sep=''))   # TODO: make this an option?
 		
 		# generate snapshots
 		if (length(data)!=0) {
@@ -2198,9 +2232,9 @@ op_domain_diff <- function(cmdline_args)
 		    if (opt$verbose) write(paste(j,lmax[[1]][j],lmax[[2]][j]),stderr())
 		    I = (j-flank):(j+flank)
 		    for (f in 1:length(files)) {
-		      mat = est[[f]]$solObj[ll,I,I]
 		      full_matrix = is_full_matrix(est[[f]]$y)
-		      if (full_matrix) mat = MatrixRotate45(mat,opt$'track-dist')
+		      if (full_matrix) { mat = MatrixRotate45(est[[f]]$solObj[ll,I,I],opt$'track-dist')
+		      } else { mat = est[[f]]$solObj[ll,I,1:min(ncol(est[[f]]$y),opt$'track-dist')] }
 		      if (opt$preprocess=='none') mat = log2(mat+1)
 		      image(mat,xaxt='n',yaxt='n',zlim=c(0,zlim[[f]]))
 		      s0 = as.vector(scores0[[f]][I])
@@ -2209,7 +2243,7 @@ op_domain_diff <- function(cmdline_args)
 		      lines(seq(0,1,length.out=length(s)),s,col='blue')
 		      enorm = which(lmax[[f]][I]==1)/length(I)
 		      abline(v=(which(lmax[[f]][I]==1)-1)/(length(I)-1),col='blue')
-		      d = 1/nrow(est[[f]]$solObj[ll,I,I])
+		      d = 1/length(I)
 		      pp = 0.5
 		      rect(pp-d,0,pp+d,0.04,col='purple',border='purple')
 		    }
@@ -2372,6 +2406,11 @@ op_compare <- function(cmdline_args)
     legend_pos = "bottomleft"
     plot_matrix(c_pearson,main='Pearson correlation',xlab=xaxis_label,ylab='correlation',q=q,qlab=qlab,legend_pos=legend_pos)
     plot_matrix(c_spearman,main='Spearman correlation',xlab=xaxis_label,ylab='correlation',q=q,qlab=qlab,legend_pos=legend_pos)
+
+    # boxplots of matrix values
+    L1 = as.list(data.frame(apply(e1$solObj,1,as.vector)))
+    L2 = as.list(data.frame(apply(e2$solObj,1,as.vector)))
+    boxplot(c(L1,L2),outline=FALSE)
   
     # plot degrees of freedom
     if (opt$verbose) { write("Computing/plotting degrees of freedom...",stderr()); }
