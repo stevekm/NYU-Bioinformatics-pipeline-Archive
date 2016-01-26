@@ -2,15 +2,35 @@
 ~/pipeline-master/code/code.main/pipeline-new-analysis chipseq-standard ~/projects/SmithLab-Researcher-ChIPSeq-2015-11-12
 
 # set the input file location (fastq.gz files from a sequencing project)
-...
+# create symlinks to all the .fastq.gz or .bam, etc., files in 
+<project>/inputs/fastq
+# make this dir if it doesn't exit
+# make subdirectories with sample names, put all files/symlinks for files per sample in each subdir
 
 # make sample sheet
-....
+<project>/inputs/code/create-sample-sheet.tcsh
+# example: 
+<project>/inputs/code/create-sample-sheet.tcsh hg19 300
 
-...
-...
+# execute pipeline
+<project>/code.main/pipeline-execute
+
+NOTES:
+it can be helpful to record your session with
+script -f typescript$(date +%F%T)
+start this from the project parent dir, or wherever you want the record file to be saved, be sure to type `exit` when you're done
+
 
 # set read permissions for project directory 
 chmod go=u -R ~/projects/ProjDir
 chmod go-w -R ~/projects/ProjDir
 
+might need the binaries; 
+```
+mkdir <project-dir>/code.repo/bin
+ln -s /ifs/home/at570/disk1/Resources/Code/pipelines-repo/code/bin/* code.repo/bin/
+
+```
+
+if it broke, clean up with 
+code/clean-all
