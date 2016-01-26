@@ -2,8 +2,12 @@
 source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-matrix-ic.tcsh [--dry-run]
+## USAGE: run-matrix-prep.tcsh [--dry-run]
 ##
+
+#% This step preprocesses contact matrices using scaling by total number of reads, effective length and imputation for missing values.  
+#% TABLES: 
+#% FIGURES:
 
 # process command-line inputs
 if ($#argv > 1) then
@@ -14,9 +18,9 @@ endif
 set opt = "$1"
 
 # setup
-set op = matrix-ic
+set op = matrix-prep
 set inpdirs = "inpdirs/*"
-set filter = ".res_[0-9]+kb/"                  # this excludes distance-restricted matrices (maxd_...)
+set filter = ".res_[0-9]+kb/"               # This excludes distance-restricted matrices (maxd=...)
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="

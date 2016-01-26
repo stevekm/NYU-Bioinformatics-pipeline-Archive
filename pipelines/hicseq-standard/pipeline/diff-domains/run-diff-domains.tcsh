@@ -5,6 +5,10 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-diff-domains.tcsh [--dry-run]
 ##
 
+#% This step identifies boundary differences in pairs of samples. 
+#% TABLES: 
+#% FIGURES:
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err

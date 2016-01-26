@@ -2,8 +2,12 @@
 source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-annotations.tcsh [--dry-run]
+## USAGE: run-hicplotter.tcsh [--dry-run]
 ##
+
+#% This step generates snapshots of Hi-C and other genomics data in specific loci.
+#% TABLES: 
+#% FIGURES:
 
 # process command-line inputs
 if ($#argv > 1) then
@@ -14,13 +18,13 @@ endif
 set opt = "$1"
 
 # setup
-set op = annotations
+set op = hicplotter
 set inpdirs = "inpdirs/*"
-set filter = ""
+set filter = "*.res_40kb"                  # work only with 40kb resolution
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="
-set resources = 1
+set resources = 1,20G
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/hicseq-$op.tcsh"
 
 # generate run script
