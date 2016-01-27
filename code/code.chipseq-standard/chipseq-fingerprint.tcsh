@@ -32,15 +32,9 @@ scripts-create-path $outdir/
 # -------------------------------------
 
 # determine input files
-set treatment_bam = `echo $objects | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
-set control_samples = `./code/read-sample-sheet.tcsh $sheet "$objects" control | sort -u | grep -v '^NA$'`
-if ("$control_samples" == "") then
-  set control_bam =
-else
-  set control_bam = `echo $control_samples | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
-endif
-set bam = `echo $treatment_bam $control_bam`
-set labels = `echo $samples $control_samples`
+set control_objects = `./code/read-sample-sheet.tcsh $sheet "$objects" control | sort -u | grep -v '^NA$'`
+set labels = `echo $objects $control_objects | tr ' ' '\n' | sort -u`
+set bam = `echo $labels | tr ' ' '\n' | awk -v d=$branch '{print d"/"$0"/alignments.bam"}'`
 
 # run deeptools wrapper
 echo ./code/chipseq-fingerprint-deeptools.tcsh $outdir $params "'$bam'" "'$labels'" | scripts-send2err 
