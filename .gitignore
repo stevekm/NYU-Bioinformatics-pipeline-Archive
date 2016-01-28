@@ -10,3 +10,6 @@ data/*
 analyses/*
 results
 .nfs*
+.Rproj.user
+*.Rproj
+misc/
