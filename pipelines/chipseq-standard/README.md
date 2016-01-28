@@ -12,7 +12,7 @@ If a new analysis project has not already been created, do so with the following
 
 Within the corresponding `<project_name>/inputs/fastq` or `<project_name>/inputs/bam` directory, subdirectories should be created with the name of each sample to be included in the analysis. The following naming scheme is preferable:
 
-<Cell_line>-<ChIP>-<treatment>-<SampleID>
+\<Cell_line\>-\<ChIP\>-\<treatment\>-\<SampleID\>
 
 Each subdirectory should contain all fastq or bam files to be used for that sample through the analysis pipeline. Symlinks can be used if the files are not contained in the same location as the project analysis directory, and are preferable to save storage space. 
 
