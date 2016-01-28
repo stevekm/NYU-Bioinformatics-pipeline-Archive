@@ -11,8 +11,8 @@ matrix-prep
 
 matrix-ic
 
-matrix-estimated
-
+#matrix-estimated
+#
 matrix-stats
 
 compare-matrices
@@ -23,8 +23,8 @@ domains
 compare-boundaries
 compare-boundaries-stats
 
-diff-domains
-
+#diff-domains
+#
 hicplotter
 
 interactions

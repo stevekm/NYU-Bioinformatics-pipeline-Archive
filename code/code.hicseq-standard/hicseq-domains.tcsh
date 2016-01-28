@@ -29,7 +29,7 @@ scripts-create-path $outdir/
 # -------------------------------------
 
 # Run domains
-if (($tool == armatus) || ($tool == caltads)) then
+if (($tool == armatus) || ($tool == di) || ($tool == topdom) || ($tool == caltads)) then
   ./code/hicseq-domains-$tool.tcsh $outdir $params $branch "$objects"
 else
   scripts-send2err "Error: unknown domain caller tool $tool."

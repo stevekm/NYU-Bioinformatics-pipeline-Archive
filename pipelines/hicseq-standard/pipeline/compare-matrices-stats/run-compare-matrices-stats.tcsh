@@ -2,8 +2,12 @@
 source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-align.tcsh [--dry-run]
+## USAGE: run-compare-matrices-stats.tcsh [--dry-run]
 ##
+
+#% This step generated correlograms showing pair-wise Pearson/Spearman correlations of Hi-C contact matrices.   
+#% TABLES: 
+#% FIGURES: pearson/correlograms.pdf spearman/correlograms.pdf
 
 # process command-line inputs
 if ($#argv > 1) then
@@ -14,24 +18,21 @@ endif
 set opt = "$1"
 
 # setup
-set op = align
-set inpdirs = "inputs"
+set op = compare-matrices-stats
+set inpdirs = "inpdirs/*"
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="
-set resources = 16
+set resources = 1
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/hicseq-$op.tcsh"
 
-# symlink fastq to results (required for first step of the pipeline)
-if (! -e inputs/$results) then
-  (cd inputs; ln -s fastq $results)
-endif
-
 # generate run script
-Rscript ./code/code.main/pipeline-master-explorer.r -v "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "sample" 1
+Rscript ./code/code.main/pipeline-master-explorer.r -v "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "*" 1
 
 # run and wait until done!
 if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run
+
+
 
 
 

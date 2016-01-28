@@ -5,6 +5,10 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-annotations.tcsh [--dry-run]
 ##
 
+#% This step annotates specific DNA-DNA interactions. 
+#% TABLES: 
+#% FIGURES:
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err
