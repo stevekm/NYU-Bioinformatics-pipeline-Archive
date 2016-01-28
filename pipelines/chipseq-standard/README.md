@@ -25,18 +25,32 @@ Each subdirectory should contain all fastq or bam files to be used for that samp
 A sample sheet must be created for the analysis project. Run the follow command to do so:
 
 ```
-<project>/inputs/code/create-sample-sheet.tcsh <genome> <fragment-size>
+inputs/code/create-sample-sheet.tcsh <genome> <fragment-size>
+```
+
+Where `<genome>` is `hg19`, `hg38`, etc.. The `<fragment-size>` entry is optional and should be a numeric argument such as `300`, representing the library size of the sequencing sample. After creation of the sample sheet, output in `inputs/sample-sheet.tsv`, a manual review process is required to match the correct control or input samples with experimental samples, verify proper grouping names, files, and other entries. This process can be completed within Microsoft Excel, but saving the file in Excel should be avoided due to the introduction of formatting errors by Excel. It is advisable to instead copy the finalized sheet from Excel and paste directly into a terminal text editor such as `vi` or `nano` for saving.
+
+## 3. Pipeline execution
+
+Run the pipeline with:
+
+```
+./code.main/pipeline-execute PROJECT-NAME E-MAIL
+```
+
+## Notes
+
+Errors encountered during pipeline execution can be viewed with:
+
+```
+code.main/pipeline-errors
+```
+
+Analysis results can be removed with:
+
+```
+code/clean-all
 ```
 
 
-
-
-INSTRUCTIONS
-
-Go into inputs directory and read the README file.
-
-Then, return to this directory and start the pipeline as follows:
-
-./code.main/pipeline-execute PROJECT-NAME E-MAIL
-
-
+*QQ: binaries*
