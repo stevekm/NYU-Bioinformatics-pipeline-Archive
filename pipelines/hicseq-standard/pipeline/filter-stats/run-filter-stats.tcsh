@@ -2,8 +2,12 @@
 source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-domains.tcsh [--dry-run]
+## USAGE: run-filter-stats.tcsh [--dry-run]
 ##
+
+#% This step generates alignment/filtering statistics. 
+#% TABLES: 
+#% FIGURES: counts.pdf percent.pdf
 
 # process command-line inputs
 if ($#argv > 1) then
@@ -14,20 +18,21 @@ endif
 set opt = "$1"
 
 # setup
-set op = domains
+set op = filter-stats
 set inpdirs = "inpdirs/*"
-set filter = "*.res_40kb"                  # work only with 40kb resolution
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="
-set resources = 1,20G
+set resources = 1
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/hicseq-$op.tcsh"
 
 # generate run script
-Rscript ./code/code.main/pipeline-master-explorer.r -v -F "$filter" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "sample" 1
+Rscript ./code/code.main/pipeline-master-explorer.r -v "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "*" 1
 
 # run and wait until done!
 if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run
+
+
 
 
 

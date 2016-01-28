@@ -5,6 +5,10 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-filter.tcsh [--dry-run]
 ##
 
+#% This step performs filtering of bam files generated in the alignment step. 
+#% TABLES: 
+#% FIGURES: 
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err

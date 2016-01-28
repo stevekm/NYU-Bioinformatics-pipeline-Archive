@@ -2,8 +2,12 @@
 source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-interactions.tcsh [--dry-run]
+## USAGE: run-matrix-estimated.tcsh [--dry-run]
 ##
+
+#% This step uses fused lasso to estimate Hi-C contact matrices.
+#% TABLES: 
+#% FIGURES: 
 
 # process command-line inputs
 if ($#argv > 1) then
@@ -14,7 +18,7 @@ endif
 set opt = "$1"
 
 # setup
-set op = interactions
+set op = matrix-estimated
 set inpdirs = "inpdirs/*"
 set results = results
 scripts-create-path $results/
@@ -23,7 +27,7 @@ set resources = 1
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/hicseq-$op.tcsh"
 
 # generate run script
-Rscript ./code/code.main/pipeline-master-explorer.r -v --filter-branch="res_10kb.maxd" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "sample" 1
+Rscript ./code/code.main/pipeline-master-explorer.r -v --exclude-branch='/matrix-filtered.[^/]+rotate45' --exclude-outdir="fused2d.*res_10kb" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "sample" 1
 
 # run and wait until done!
 set max_jobs = 5

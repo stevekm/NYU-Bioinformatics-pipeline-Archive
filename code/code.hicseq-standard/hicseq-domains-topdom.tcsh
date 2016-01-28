@@ -2,7 +2,7 @@
 source ./code/code.main/custom-tcshrc     # shell settings
 
 ##
-## USAGE: hicseq-domains-caltads.tcsh OUTPUT-DIR PARAM-SCRIPT BRANCH OBJECT(S)
+## USAGE: hicseq-domains-topdom.tcsh OUTPUT-DIR PARAM-SCRIPT BRANCH SAMPLE
 ##
 
 if ($#argv != 4) then
@@ -13,17 +13,10 @@ endif
 set outdir = $1
 set params = $2
 set branch = $3
-set objects = ($4)
-
-# test number of input objects
-set object = $objects[1]
-if ($#objects != 1) then
-  scripts-send2err "Error: this operation allows only one input object!"
-  exit 1
-endif
+set sample = $4
 
 # read variables from input branch
-source ./code/code.main/scripts-read-job-vars $branch "$objects" "genome genome_dir bin_size"
+source ./code/code.main/scripts-read-job-vars $branch "$sample" "genome genome_dir bin_size"
 
 # run parameter script
 source $params
@@ -35,7 +28,7 @@ scripts-create-path $outdir/
 # -----  MAIN CODE BELOW --------------
 # -------------------------------------
 
-set inpdir = $branch/$object
+set inpdir = $branch/$sample
 set workdir = $outdir/work
 mkdir -p $workdir
 
@@ -52,28 +45,29 @@ foreach est_mat ($est_matrices)
     cat $inpdir/$est_mat >! $workdir/tmp/matrix.k=000.tsv
   endif
   
-  # convert matrices and run caltads            # TODO: parallelize this?
+  # convert matrices and run caltads
   foreach mat ($workdir/tmp/matrix.*.tsv)
     set pref = `basename $mat .tsv | sed 's/^matrix\.//'`.$chr
-    set inpmat = $pref.${chr}_${chr}.txt
-    Rscript ./code/create-caltads-matrix.r $workdir/$inpmat $mat $chr
+    set inpmat = $pref.matrix.txt
+    Rscript ./code/create-topdom-matrix.r $mat $workdir/$inpmat 
+    set tpath = `readlink -f $topdompath`
     set p = `pwd`
     cd $workdir
-    calTADs -O $pref -F TXT -T $pref.chr%s_chr%s.txt -c 0 1 2 $caltads_params
+    Rscript $p/code/run-topdom.r $inpmat $winsize $tpath
     rm -f $inpmat
     cd $p
   end
   rm -rf $workdir/tmp
 end
 	
-# Create genome consensus
-set kappas = `cd $workdir; ls -1 *.hmmdomain.txt | cut -d'.' -f1 | sort -u` 
+# Create genomewide domains
+set kappas = `cd $workdir; ls -1 *.domain | cut -d'.' -f1 | sort -u` 
 foreach k ($kappas)
-  cat $workdir/$k.*.hmmdomain.txt | grep -vE "^#" | grep -vE '^M|^Y' | cut -f1,3-4 | sed 's/^X/23/g' | sort -k1,1n -k2,2n | sed 's/^23	/X	/g' | sed 's/^/chr/g' | scripts-sortbed >! $workdir/../domains.$k.bed
+  cat $workdir/$k.*.domain | grep -Ev 'chr	' | grep -E "	domain	" | cut -f1,3,5 | sed 's/^chr//' | sed 's/^X	/23	/g' | sort -k1,1n -k2,2n | sed 's/^23	/X	/' | sed 's/^/chr/' | scripts-sortbed >! $workdir/../domains.$k.bed
 end
 
 # cleanup
-rm -rf $workdir
+# rm -rf $workdir
 
 # -------------------------------------
 # -----  MAIN CODE ABOVE --------------

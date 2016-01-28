@@ -39,7 +39,7 @@ set inpdir = $branch/$object
 set workdir = $outdir/work
 mkdir -p $workdir
 
-set est_matrices = `cd $inpdir; ls -1 matrix.*.tsv matrix.*.RData`            # TODO: inpdir should not have both tsv and RData, check!
+set est_matrices = `cd $inpdir; ls -1 matrix.*.tsv matrix.*.RData | grep -vwE "$chrom_excluded"`            # TODO: inpdir should not have both tsv and RData, check!
 foreach est_mat ($est_matrices)
   scripts-send2err "Processing matrix $est_mat..."
 	set chr = `echo $est_mat | cut -d'.' -f2`
