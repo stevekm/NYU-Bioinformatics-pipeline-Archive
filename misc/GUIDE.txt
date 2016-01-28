@@ -7,10 +7,33 @@
 # make this dir if it doesn't exit
 # make subdirectories with sample names, put all files/symlinks for files per sample in each subdir
 
+example; use code like this:
+```
+ProjDir="/ifs/home/kellys04/projects/SawyersLab_Ping_MSKCC_ChIP-Seq_2016-01-06"
+FastqDir="/ifs/home/kellys04/projects/SawyersLab_Ping_MSKCC_ChIP-Seq_2016-01-06/project_notes/fastq-Ping"
+
+for i in $FastqDir/*.fastq.gz; do 
+  echo "$i" # symlinked file
+  SampleName=$(basename "$i") # get the filename
+  SampleName=$(echo $SampleName |  sed -nr 's/^([[:digit:]]++).*/\1/p' ) # first 1-2 digits in the name =  samplename in this case
+  mkdir -p $ProjDir/inputs/fastq/$SampleName
+  ln -s $(readlink -f $i) $ProjDir/inputs/fastq/$SampleName/$(basename $i)
+done
+```
+
+
+
+
 # make sample sheet
 <project>/inputs/code/create-sample-sheet.tcsh
 # example: 
-<project>/inputs/code/create-sample-sheet.tcsh hg19 300
+<project>/inputs/code/create-sample-sheet.tcsh hg19 300 # with the genome, fragmentation/library size included
+# do manual review and editing of the sample sheet to make sure the groupings, controls, etc., are all correct. 
+# make sure the sample sheet is saved back in the orginal location after editing, in TSV format;
+# easy way is to do editing in Excel, then copy/paste the whole sheet into nano  or your favorite terminal text editor, save as sample-sheet.tsv
+
+
+
 
 # execute pipeline
 <project>/code.main/pipeline-execute
