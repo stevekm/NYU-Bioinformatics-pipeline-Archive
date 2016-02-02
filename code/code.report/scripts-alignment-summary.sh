@@ -17,7 +17,7 @@ fi
 module unload r/3.0.2
 module load r/3.2.0 # need this version of R, always!
 
-# get the path to the R companion script
+# get the path to the R companion script, scripts-alignment-summary.R; should be in the same dir
 BarplotScript=$(readlink -m $(dirname $0)) # get the current script path
 CurrentScript=$(basename $0)
 BarplotScript=$BarplotScript/${CurrentScript/.sh/.R}
