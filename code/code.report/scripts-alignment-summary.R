@@ -2,6 +2,7 @@
 
 ## USAGE: alignment_summary_stats.R /path/to/outputdir /path/to/alignment/.../db.Rdata /path/to/projdir/aligndir
 ## DESCRIPTION: create summary tables and dual barplots to visualize alignment reads
+## this script is called by scripts-alignment-summary.sh; don't invoke this script directly
 
 # get the script arguments
 args <- commandArgs()
