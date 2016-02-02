@@ -12,4 +12,7 @@ results
 .nfs*
 .Rproj.user
 *.Rproj
-misc/
+misc/misc_files/
+.Rhistory
+data
+misc_files
