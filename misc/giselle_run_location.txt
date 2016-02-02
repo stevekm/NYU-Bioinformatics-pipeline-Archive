@@ -1,1 +1,0 @@
-/ifs/home/at570/disk1/Resources/Code/pipelines/chipseq_standard
