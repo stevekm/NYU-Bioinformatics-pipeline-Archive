@@ -20,10 +20,6 @@ shopt -q globstar; globstar_set=$?
 
 #~~~~~~~~~~~~~~~~~~#
 
-# shopt -s extglob  #more regex like globs 
-# shopt -s  # don't return empyty globs
-# shopt -s globstar # recursive globs
-
 # make sure that the correct number of script arguments were used
 if [ $# != 3 ] # if not enough args provided
 then
