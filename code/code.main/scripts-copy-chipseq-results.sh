@@ -149,8 +149,7 @@ if [ -d $Pipeline_dir/heatmaps/results ]; then
   mkdir -p $OUT_DIR_heatmap
   
   # glob the PCA files we want
-  FILES=($Pipeline_heatmap_dir/**/@(clustering.png) )
-
+  FILES=($Pipeline_heatmap_dir/**/@(clustering.tif) )
   for i in "${FILES[@]}"; do
     # flatten the filepath to make the filename # consider changing this later ?
     # strip this : align.by_sample.bowtie2/all-samples/
@@ -211,8 +210,15 @@ fi
 # #
 
 
-# Copy the alignment summary stats
-cp -avn "$Algn_stats_dir" $OUT_DIR/$(basename $Algn_stats_dir) 
+# Copy the alignment summary stats, if it doesn't exist
+if [ ! -d $OUT_DIR/$(basename $Algn_stats_dir) ]; then
+  cp -avn "$Algn_stats_dir" $OUT_DIR/$(basename $Algn_stats_dir)
+fi
+
+# Copy the sample sheet
+if [ ! -f $OUT_DIR/sample-sheet.tsv ]; then
+  cp -avn "$Pipeline_dir/inputs/sample-sheet.tsv" $OUT_DIR/sample-sheet.tsv
+fi
 
 # unset globs if it wasn't originally set
 ((extglob_set)) && shopt -u extglob
