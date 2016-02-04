@@ -21,7 +21,7 @@ shopt -q globstar; globstar_set=$?
 #~~~~~~~~~~~~~~~~~~#
 
 # make sure that the correct number of script arguments were used
-if [ $# != 3 ] # if not enough args provided
+if [ $# != 4 ] # if not enough args provided
 then
   grep '^##' $0 # print out lines from the script that start with '##' and exit
   exit
