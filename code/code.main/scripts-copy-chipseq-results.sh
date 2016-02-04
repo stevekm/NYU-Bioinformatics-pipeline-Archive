@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-## USAGE: scripts-copy-chipseq.sh /path/to/outdir /path/to/project_dir /path/to/project_dir/alignment_stats_dir
+## USAGE: scripts-copy-chipseq.sh /path/to/outdir /path/to/project_dir /path/to/project_dir/alignment_stats_dir /path/to/fastqc_dir
 ## this script copies the results of a chip-seq analysis over to a Results dir for a client. 
 ## 
 
@@ -32,6 +32,7 @@ fi
 OUT_DIR="$(readlink -m $1)" # get full path, through symlinks
 PROJ_DIR="$(readlink -m $2)"
 Algn_stats_dir="$(readlink -m $3)"
+FastQC_dir="$(readlink -m $4)"
 Pipeline_dir="$PROJ_DIR"/pipeline
 
 
@@ -213,6 +214,12 @@ fi
 # Copy the alignment summary stats, if it doesn't exist
 if [ ! -d $OUT_DIR/$(basename $Algn_stats_dir) ]; then
   cp -avn "$Algn_stats_dir" $OUT_DIR/$(basename $Algn_stats_dir)
+fi
+
+
+# Copy the fastqc dir, if it doesn't exist
+if [ ! -d $OUT_DIR/$(basename $FastQC_dir) ]; then
+  cp -avn "$FastQC_dir" $OUT_DIR/$(basename $FastQC_dir)
 fi
 
 # Copy the sample sheet
