@@ -1,6 +1,6 @@
 #!/usr/bin/Rscript
 
-## USAGE: alignment_summary_stats.R /path/to/outputdir /path/to/alignment/.../db.Rdata /path/to/projdir/alignment_results_dir
+## USAGE: alignment_summary_stats.R /path/to/outputdir /path/to/alignment/.../db.Rdata /path/to/projdir/aligndir
 ## DESCRIPTION: create summary tables and dual barplots to visualize alignment reads
 ## this script is called by scripts-alignment-summary.sh; don't invoke this script directly
 
@@ -9,9 +9,7 @@ args <- commandArgs()
 
 OutDir<-args[6]
 alignDB_filepath<-args[7]
-# AlignDir<-args[8]
-AlignResultsDir<-args[8]
-AlignDir<-dirname(path = AlignResultsDir)
+AlignDir<-args[8]
 
 # load the db.Rdata file
 # # create a new environment for it
