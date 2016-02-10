@@ -1,6 +1,0 @@
-\section{PCA Analysis}
-
-This section will be added to the document if PCA analysis was performed. 
-
-
-
