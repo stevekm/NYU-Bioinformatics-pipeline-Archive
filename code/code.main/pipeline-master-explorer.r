@@ -21,7 +21,9 @@ check_status = function(v)
   if (missing==TRUE) return("missing-inputs")
   exists = file.exists(v["out-dir"])
   if (exists==FALSE) return("new")
-  uptodate = file.info(paste(v["out-dir"],"job.sh",sep='/'))$mtime > max(file.info(inp_files)$mtime)
+  job_file = paste(v["out-dir"],"job.sh",sep='/')
+  if (file.exists(job_file)==FALSE) return("missing-outputs")
+  uptodate = file.info(job_file)$mtime > max(file.info(inp_files)$mtime)
   if (uptodate==FALSE) return("out-of-date")
   return("up-to-date")
 }
@@ -289,6 +291,7 @@ if (opt$verbose) {
   write(paste("- output objects = ",nrow(obj_db),sep=''),stderr())
   write(paste("- up-to-date output objects = ",sum(obj_db[,"status"]=="up-to-date"),sep=''),stderr())
   write(paste("- missing inputs = ",sum(obj_db[,"status"]=="missing-inputs"),sep=''),stderr())
+  write(paste("- missing outputs = ",sum(obj_db[,"status"]=="missing-outputs"),sep=''),stderr())
   write(paste("- out-of-date output objects = ",sum(obj_db[,"status"]=="out-of-date"),sep=''),stderr())
   write(paste("- new output objects = ",sum(obj_db[,"status"]=="new"),sep=''),stderr())
   write(paste("- output objects to be computed = ",sum(compute),sep=''),stderr())
@@ -300,8 +303,8 @@ obj_db = obj_db[,order(colnames(obj_db))]
 # save data
 if (opt$verbose) write("Saving database...",stderr())
 save.image(file=paste(out_dir,"db.RData",sep="/"))
-write.table(obj_db[compute,"command"],col.names=FALSE,row.names=FALSE,sep='\t',quote=FALSE,file=paste(out_dir,"run",sep="/"))
-write.table(obj_db[outofdate,"command"],col.names=FALSE,row.names=FALSE,sep='\t',quote=FALSE,file=paste(out_dir,"run.outofdate",sep="/"))
+write.table(obj_db[compute,"command",drop=FALSE],col.names=FALSE,row.names=FALSE,sep='\t',quote=FALSE,file=paste(out_dir,"run",sep="/"))
+write.table(obj_db[outofdate,"command",drop=FALSE],col.names=FALSE,row.names=FALSE,sep='\t',quote=FALSE,file=paste(out_dir,"run.outofdate",sep="/"))
 write.table(obj_db,col.names=TRUE,row.names=FALSE,sep='\t',quote=FALSE,file=paste(out_dir,"db.tsv",sep="/"))
 
 # done
