@@ -1,0 +1,280 @@
+\documentclass[8pt]{beamer}
+\geometry{paperwidth=140mm,paperheight=105mm} % larger page size
+%\documentclass[8pt,xcolor={dvipsnames}]{beamer}
+\setcounter{secnumdepth}{3} % something about sections
+\setcounter{tocdepth}{3} % table of contents depth
+\usepackage{breakurl}
+\usepackage{cite} % for citations, BibTeX I think
+\usepackage{etoolbox} % this was not installed on HPCF, its in my home dir right now!! % has extra tools for forloops, etc.
+\usepackage{forloop} % for LaTeX for loops; easier to use R loops to 'cat' TeX into the document instead!!
+\usepackage{tikz} % for custom graphics
+%\usepackage{subcaption} %for subfigures%
+\usepackage{amsmath}
+\usepackage{graphicx} % good for advanced graphics options
+\usepackage{tabularx} % for fancy table settings..
+\usepackage{url}
+% \usepackage{adjustbox} % for auto-size box to put sample sheet into, also needs collectbox.sty
+% \usepackage[usenames,dvipsnames]{color}
+%%%%%%%%%%%%%experimental for xtable italics http://stackoverflow.com/questions/7996968/formatting-sweave-tables-two-challenges
+% \usepackage{longtable}
+% \SweaveOpts{keep.source=TRUE}  % Keeps formatting of the R code.
+%%%%%%%%%%%%%%%%%%%
+\makeatletter % turn on the '@' command character; needs to come before beamer settings
+% \usetheme{Hannover} %  \usetheme{PaloAlto} % Bergen
+% \usetheme[left]{Marburg} %  width= % hideothersubsections
+\usetheme[left,hideothersubsections]{Marburg} %  width= % hideothersubsections
+% location installed themes and such: /usr/share/texmf/tex/latex/beamer
+\addtobeamertemplate{navigation symbols}{}{ % % this adds the page numbers at the bottom of the slide
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+\makeatother % turn off the '@' command character; needs to come after beamer settings
+% \graphicspath{/home/varitint/Dropbox/Lab/Teaching/Genomics_Class/Genomics_Lesson3_R!/With_embedded_R_code/figure/}
+%
+%%%%%%%%%%
+\listfiles % get versions of files used for document compliaton, written at the end of the .log file!
+\begin{document}
+% always need this code chunk, never mess with it!
+<<setup, include=FALSE>>=
+opts_chunk$set(fig.path='figure/beamer-',fig.align='center',fig.show='hold',size='footnotesize')
+@
+%
+<<R_title_setup,echo=FALSE,engine='R'>>=
+# in this code chunk, set some global R parameters for the report
+# print in document with \Sexpr(); 
+# character strings that *appear in text* need to be translated to LaTeX to remove special characters, etc.
+suppressPackageStartupMessages(library("Hmisc")) # need for latexTranslate()
+suppressPackageStartupMessages(require(xtable))
+
+Project_dir<-"" # project directory goes here
+
+Project_ID<-"" # project ID goes here
+Project_ID<-latexTranslate(Project_ID) # use this to print on the title page
+# use latexTranslate on any text string that is going to appear in the doc
+
+Project_ID_short<-"" # trucnated ID for use in the beamer sidebar title
+Project_ID_short<-latexTranslate(Project_ID_short)
+
+Report_author<-"Stephen M. Kelly" # author name goes here
+Report_author<-latexTranslate(Report_author)
+
+Report_author_email<-"stephen.kelly@nyumc.org" # author email goes here
+Report_author_email<-latexTranslate(Report_author_email)
+
+Report_dir<-"" # directory where the report is located, within the project dir
+# Report_dir<-latexTranslate(Report_dir) 
+
+PI_name<-"" # principle investigator name
+PI_name<-latexTranslate(PI_name)
+@
+% Create the Title page
+
+\title[\Sexpr{Project_ID_short}]{\Sexpr{Project_ID} \\ Quality Metrics}
+\author{\Sexpr{Report_author}}
+\institute{\normalsize Dr. Aristotelis Tsirigos \\ PI: \Sexpr{PI_name} \\ Genome Technology Center, \\ NYU Langone Medical Center, New York, NY 10016}
+\date{\texttt{\Sexpr{Report_author_email}} \\ \today}
+\titlegraphic{\includegraphics[width=0.25\textwidth]{\Sexpr{Report_dir}/figure/NYU_white}} % image to show on the title slide
+\maketitle
+<<R_analysis_setup,echo=FALSE,engine='R',include=FALSE>>=
+
+# set the location for the figures
+Fig_OutDir<-paste0(Report_dir,"/figure") 
+# make the dir
+dir.create(Fig_OutDir, showWarnings = FALSE, recursive = TRUE) #, mode = "0777") # check about permissions!
+
+
+Project_dir<-"" # project directory; redundant?
+Pipeline_dir<-paste0(Project_dir,"/pipeline")
+# get the index for the analysis pipeline; read it into a vector
+Pipeline_Index<-scan(file=paste0(Pipeline_dir,"/index.txt"),what="", sep="\n",quiet = T)
+
+# ~~~~~~ TO DO ON THE REPORT HERE:
+# move the ghostscript, convert tif steps into pipeline steps
+# make pipeline step for the alignment summary stats
+# fix the sample sheet scaling to fit textwidth or something
+# The object name / branch name is displaying "all samples" for heatmaps, PCA, try to do somethign about this
+# Update all run files with new descriptors for report aspects
+# do the above and update the repository with it
+# move the report into the repository
+# figure out how we are going to get the title page information into the report
+# need a wrapper script for the report to compile on the command line
+# add a list of the filenames from the samplesheet that I cut out 
+
+@
+
+
+<<beamer-function,engine='R',include=FALSE,echo=FALSE>>=
+# function for creating the beamer slides
+pipeline_report_generatoR<- function(x){
+  # x is a line/entry in the pipeline indext.txt e.g. "qc", corresponds to dir name
+  # x<-"heatmaps"
+  
+  # ~~~~~ OBJECT CREATION ~~~~~~~~~ #
+  # read in the run file for the pipeline step
+  RunFile<-scan(file = paste(Pipeline_dir,x,"run",sep="/"),character(0), sep = "\n")
+  
+  # get the description of the pipeline step from the run file
+  PipelineDescription<-gsub(pattern = "#DESCRIPTION: ",
+                            replacement = "",
+                            x = grep(pattern = "#DESCRIPTION: ",x = RunFile,fixed = TRUE,value = TRUE),fixed = TRUE)
+  PipelineTitle<-gsub(pattern = "#TITLE: ",
+                            replacement = "",
+                            x = grep(pattern = "#TITLE: ",x = RunFile,fixed = TRUE,value = TRUE),fixed = TRUE)
+  # check if Title exitsts; otherwise use the pipeline step name
+  if(length(PipelineTitle)==0L){PipelineTitle<-x}
+
+  FigureFilename<-unlist(strsplit(x = gsub(pattern = "#FIGURE: ",
+                                           replacement = "", x = grep(pattern = "#FIGURE: ",
+                                                                      x = RunFile,fixed = TRUE,value = TRUE),
+                                           fixed = TRUE),
+                                  split = " ",fixed = TRUE))
+  # get the params file
+  PipelineParamsFilename<-unlist(strsplit(x = gsub(pattern = "#PARAMS: ",
+                                                   replacement = "",x = grep(pattern = "#PARAMS: ",
+                                                                             x = RunFile,fixed = TRUE,value = TRUE),
+                                                   fixed = TRUE),
+                                          split = " ",fixed = TRUE))
+
+  
+  # load the environment saved in the pipeline step 
+  load(file = paste0(Pipeline_dir,"/",x,"/results/.db/db.RData"),verbose = FALSE)
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+  
+  
+  
+  # ~~~~ PRINT SOME LATEX ~~~~~~~~~~#
+  # start a new section in the document
+  cat("\\section{", latexTranslate(PipelineTitle), "}\n", sep="") 
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+  
+  
+  # if description is defined, print it
+  if(length(PipelineDescription)!=0){
+    cat("\\begin{frame}{", latexTranslate(PipelineTitle), "}\n", sep="")
+    cat(latexTranslate(PipelineDescription),"\n",sep = "")
+    cat("\\end{frame}\n\n") 
+  }
+  
+  # if params files are defined, print them
+  if(length(PipelineParamsFilename)!=0){
+    for(k in PipelineParamsFilename){
+      PipelineParams<-scan(file = paste(Pipeline_dir,x,"params",k,sep="/"),character(0), sep = "\n")
+     cat("\\begin{frame}{", latexTranslate(PipelineTitle), " Parameters}\n", sep="")
+     cat("\\scriptsize{",cat(k,latexTranslate(PipelineParams),sep = "\n\n"),"}\n",sep = "")
+     cat("\\end{frame}\n\n")
+    }
+  }
+  
+  # print the figures
+  for(q in 1:length(obj_db[['out-dir']])){
+    # ~~~~~ OBJECT CREATION ~~~~~~~~~ #
+    # get the items we need
+    ObjectName<-as.character(obj_db[['out-object']][q]) # outout object # latexTranslate()
+    ObjectBranch<-as.character(obj_db[['out-branch']][q]) # output analysis branch
+    ObjectOutdir<-as.character(obj_db[['out-dir']][q]) # out-dir 
+    FigureFilepath<-paste(Pipeline_dir,x,ObjectOutdir,FigureFilename,sep="/")
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+    
+    # ~~~~ PRINT SOME LATEX ~~~~~~~~~~#
+    # print the LaTeX markup for the beamer frame
+    cat("\\subsubsection{", latexTranslate(ObjectName), "}\n", sep="") # this needs to be changed; see Heatmaps
+    cat("\\begin{frame}{", latexTranslate(ObjectName), "}\n", sep="") # this needs to be changed; see Heatmaps
+    cat("\\scriptsize{", latexTranslate(ObjectBranch), "}\n", sep="")
+    cat("\\includegraphics[width=0.9\\linewidth,height=0.9\\textheight,keepaspectratio]{", FigureFilepath, "}\n", sep="")
+    cat("\\end{frame}\n\n") 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ # 
+  }
+}
+
+@
+
+
+<<image_conversion,echo=FALSE,engine='bash',include=FALSE>>=
+# this step is hard coded for now, needs to be incorporated into the pipeline
+#~~~ Shell Options ~~~~#
+# remember whether extglob was originally set, so we know whether to unset it
+shopt -q extglob; extglob_set=$?
+# set extglob if it wasn't originally set.
+((extglob_set)) && shopt -s extglob
+# Note, 0 (true) from shopt -q is "false" in a math context.
+
+shopt -q nullglob; nullglob_set=$?
+((nullglob_set)) && shopt -s nullglob
+
+shopt -q globstar; globstar_set=$?
+((globstar_set)) && shopt -s globstar
+#~~~~~~~~~~~~~~~~~~#
+
+
+
+Pipeline_dir="/ifs/home/kellys04/projects/SawyersLab_Eugine_MSKCC_ChIP-Seq_2016-01-14/pipeline"
+
+
+
+# convert the heatmaps to png for LaTeX
+Pipeline_heatmaps_dir="$Pipeline_dir/heatmaps/results"
+# glob the peaks files we want
+FILES=($Pipeline_heatmaps_dir/**/@(clustering.tif) )
+for i in "${FILES[@]}"; do
+  TMP_NAME=$(echo ${i%.tif}.png)
+  convert "$i" "${i%.tif}.png"
+done
+
+
+# extract 3rd page pdf from PCA pdf
+# !!!! figure names cannot contain '.' as per LaTeX !!!!
+Pipeline_pca_dir="$Pipeline_dir/pca/results"
+FILES=($Pipeline_pca_dir/**/@(report.qnorm.pdf) )
+for i in "${FILES[@]}"; do
+  TMP_NAME=$(echo ${i%.qnorm.pdf}_qnorm_page3.pdf)
+  gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dFirstPage=3 -dLastPage=3 -sOutputFile="$TMP_NAME" "$i"
+done
+
+# unset globs if it wasn't originally set # probably not needed here... 
+((extglob_set)) && shopt -u extglob
+((nullglob_set)) && shopt -u nullglob
+((globstar_set)) && shopt -u globstar
+
+@
+
+
+% make the report
+<<sample1,results='asis',echo=FALSE,eval=TRUE>>=
+# print the sample sheet
+PipelineSampleSheet<-read.table(file = paste(Pipeline_dir,"inputs","sample-sheet.tsv",sep = "/"),header = T,sep = "\t" )
+
+cat("\\section{", "Sample Sheet", "}\n", sep="") # don't forget you need double '\\' because one gets eaten by R !!
+cat("\\begin{frame}{"," Analysis Sample Sheet}\n", sep="") 
+# print(xtable(x = PipelineSampleSheet[,grep("^fastq",colnames(PipelineSampleSheet),invert = T)]),size="\\footnotesize",width = "\\textwidth",tabular.environment = "tabularx")#scalebox = 0.5)
+print(xtable(x = PipelineSampleSheet[,grep("^fastq",colnames(PipelineSampleSheet),invert = T)]),size="\\footnotesize",scalebox = 0.6)
+cat("\\end{frame}\n\n") 
+
+# example  
+# a <- initial_data[grep("^OFB[0-9]+", names(initial_data))]   # nice regex example here
+
+
+# iterate over the pipeline index
+for(i in Pipeline_Index){
+  # only execute the fuction if there are figures defined in the run file
+  RunFile<-scan(file = paste(Pipeline_dir,i,"run",sep="/"),character(0), sep = "\n")
+
+  FigureFilename<-gsub(pattern = "#FIGURE: ",
+                       replacement = "",
+                       x = grep(pattern = "#FIGURE: ",x = RunFile,fixed = TRUE,value = TRUE),fixed = TRUE)
+  # look for figures in the run file; length greater than 0
+  if(length(FigureFilename)!=0){pipeline_report_generatoR(i)} # execute function
+ }
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Session Information}
+% \begin{frame}{System and Session Information}
+% \begin{frame}[fragile]{System and Session Information}
+<<Session>>=
+system('uname -srv',intern=T)
+sessionInfo()
+@
+\LaTeX{} version: \LaTeXe~ \fmtversion
+% \end{frame}
+\end{document}
