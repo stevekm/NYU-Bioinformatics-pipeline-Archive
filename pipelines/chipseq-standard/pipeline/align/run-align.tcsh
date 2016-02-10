@@ -37,5 +37,8 @@ Rscript ./code/code.main/pipeline-master-explorer.r -v "$cmd" $results/$op "para
 # run and wait until done!
 if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run
 
-
+# run the alignment stats script
+if ( -e $results) then
+  (./code/code.main/scripts-alignment-summary.sh ./results_stats ./$results/.db/db.RData ./$results)
+endif
 

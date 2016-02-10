@@ -1,13 +1,13 @@
 #!/bin/bash
 
 ##
-## USAGE: scripts-alignment-summary.sh OutputDir alignment.db.Rdata sample-sheet.tsv
+## USAGE: scripts-alignment-summary.sh OutputDir ProjectDir
 ##
 
 #% DESCRIPTION: This wrapper script will aggregate summary alignment statistics and create barplots
 
 # make sure that the correct number of script arguments were used
-if [ $# != 3 ]
+if [ $# != 2 ]
 then
   grep '^##' $0 # print out lines from the script that start with ##
   exit
@@ -24,19 +24,17 @@ BarplotScript=$BarplotScript/${CurrentScript/.sh/.R}
 
 # get the script arguments
 OutputDir=$1
-# ProjDir=$2
-AlignDB=$2
-AlignResultsDir=$3 # one dir up from <align>/results
+ProjDir=$2
 
 # make sure the OutputDir exists
 mkdir -p $OutputDir
 
 # get the path to the alignment pipeline summary object
-# AlignDB=$ProjDir/pipeline/align/results/.db/db.RData
-# get the path to the alignment directory
-# AlignDir=$ProjDir/pipeline/align
+AlignDB=$ProjDir/pipeline/align/results/.db/db.RData
 
+# get the path to the alignment directory
+AlignDir=$ProjDir/pipeline/align
 
 # make sure to call Rscript directly here to get the correct version and args entries in the script!
-Rscript $BarplotScript "$OutputDir" "$AlignDB" "$AlignResultsDir"
+Rscript $BarplotScript "$OutputDir" "$AlignDB" "$AlignDir"
 
