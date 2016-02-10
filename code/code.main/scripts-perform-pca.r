@@ -2,39 +2,46 @@
 #$ -S /usr/bin/Rscript
 
 ##
-## USAGE: perform_pca.r MATRIX [COLUMN-NAMES]
+## USAGE: scripts-perform-pca.r [OPTIONS] MATRIX
 ##
 
-plotPCA <- function(mat,show_text,use_short_names)
+plotPCA <- function(mat,show_text,use_short_names,plain)
 {
-  library("RColorBrewer")
-  library("genefilter")
-  library("lattice")
-  library("gplots")
-  
   pca = prcomp(t(mat))
-  plot(pca)
-  heatmap.2(pca$x,scale='column',key=FALSE,trace='none',margins=c(1,5),Colv=FALSE,dendrogram='row',labCol=NULL,cexRow=0.5)
+  if (plain==FALSE) {
+    plot(pca)
+    heatmap.2(pca$x,scale='column',key=FALSE,trace='none',margins=c(1,5),Colv=FALSE,dendrogram='row',labCol=NULL,cexRow=0.5)
+  }
   names = colnames(mat)
   fac = factor(sapply(names,function(x){strsplit(x,':')[[1]][1]}))
   short_names = as.vector(sapply(names,function(x){strsplit(x,':')[[1]][2]}))
   if (show_text) { if (use_short_names) { labels = short_names } else { labels = names } } else { labels = NULL }
   colours = rep(c(brewer.pal(7,"Set1"),brewer.pal(7,"Set2"),brewer.pal(7,"Set3")),nlevels(fac))[1:nlevels(fac)]
 
-  F = c(PC2~PC1,PC3~PC2)  #,PC4~PC3,PC5~PC4)
-  Fplot = lapply(
-    F, 
-    function(f) {
+  if (plain==TRUE) { 
+    pc_list = c(PC2~PC1)
+    f = function(pc) {
       xyplot(
-        f, groups=fac, data=as.data.frame(pca$x), pch=16, cex=1,
+        pc, groups=fac, data=as.data.frame(pca$x), pch=16, cex=1,
+        panel=function(x, y, ...) { panel.xyplot(x, y, ...); ltext(x=x, y=y, labels=labels, pos=1, offset=0.8, cex=0.5) },
+        aspect = "fill", col=colours, scales=list(x=list(at=NULL),y=list(at=NULL)), xlab=NULL, ylab=NULL
+      )
+    }
+  } else { 
+    pc_list = c(PC2~PC1,PC3~PC2) 
+    f = function(pc) {
+      xyplot(
+        pc, groups=fac, data=as.data.frame(pca$x), pch=16, cex=1,
         panel=function(x, y, ...) { panel.xyplot(x, y, ...); ltext(x=x, y=y, labels=labels, pos=1, offset=0.8, cex=0.5) },
         aspect = "fill", col=colours,
         main = draw.key(key=list(rect=list(col=colours),text=list(levels(fac)),rep=FALSE,cex=0.5))
       )
     }
-  )
+  }
 
-  lapply(Fplot,print)
+  # generate plots
+  lapply(lapply(pc_list,f),print)
+
   return(pca)
 }
 
@@ -61,7 +68,8 @@ option_list <- list(
   make_option(c("-o","--output-dir"), default="", help="Output directory (required) [default \"%default\"]."),
   make_option(c("-L","--sample-labels"), default="", help="A file containing sample labels in its first column [default \"%default\"]."),
   make_option(c("--show-text"), action="store_true",default=FALSE, help="Display sample label text on PCA plot."),
-  make_option(c("--use-short-names"), action="store_true",default=FALSE, help="Use only second part of the name (after the colon).")
+  make_option(c("--use-short-names"), action="store_true",default=FALSE, help="Use only second part of the name (after the colon)."),
+  make_option(c("--plain"), action="store_true",default=FALSE, help="Create only one page (PC1 vs PC2).")
 );
 usage = 'perform_pca.r [OPTIONS] MATRIX';
   
@@ -85,17 +93,22 @@ if (opt$'verbose'==TRUE) write('Loading input matrix...',stderr())
 x = as.matrix(read.table(files[1],header=T,row.names=1,check.names=FALSE))
 if (sample_labels!="") { colnames(x) = t(read.table(sample_labels,header=F)[,1]) }
 
+# load libraries
+library("RColorBrewer")
+library("lattice")
+library("gplots")
+
 # PCA on raw input matrix
 if (opt$'verbose'==TRUE) write('Performing PCA on input matrix...',stderr())
 pdf(paste(out_dir,'/report.raw.pdf',sep=''))
-x_pca = plotPCA(x,show_text=show_text,use_short_names=opt$"use-short-names")
+x_pca = plotPCA(x,show_text=show_text,use_short_names=opt$"use-short-names",plain=opt$"plain")
 dev.off()
 
 # PCA on mean-normalized matrix
 if (opt$'verbose'==TRUE) write('Performing PCA on mean-normalized matrix...',stderr())
 z = t(t(x)/apply(x,2,mean))
 pdf(paste(out_dir,'/report.mnorm.pdf',sep=''))
-z_pca = plotPCA(z,show_text=show_text,use_short_names=opt$"use-short-names")
+z_pca = plotPCA(z,show_text=show_text,use_short_names=opt$"use-short-names",plain=opt$"plain")
 dev.off()
 
 # PCA on quantile-normalized matrix
@@ -105,7 +118,7 @@ y = normalize.quantiles(x)
 rownames(y) = rownames(x)
 colnames(y) = colnames(x)
 pdf(paste(out_dir,'/report.qnorm.pdf',sep=''))
-y_pca = plotPCA(y,show_text=show_text,use_short_names=opt$"use-short-names")
+y_pca = plotPCA(y,show_text=show_text,use_short_names=opt$"use-short-names",plain=opt$"plain")
 dev.off()
 
 #if (opt$'verbose'==TRUE) write('Saving results...',stderr())

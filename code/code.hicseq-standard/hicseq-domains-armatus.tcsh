@@ -49,7 +49,7 @@ foreach est_mat ($est_matrices)
     Rscript ./code/hic-matrix.r matrices -v -o $workdir/tmp $inpdir/$est_mat
   else
     mkdir -p $workdir/tmp
-    cat $inpdir/$est_mat >! $workdir/tmp/matrix.k=000.tsv
+    cat $inpdir/$est_mat >! $workdir/tmp/matrix.k=001.tsv
   endif
   
   # convert matrices and run armatus            # TODO: parallelize this?
