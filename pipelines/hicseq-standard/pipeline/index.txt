@@ -11,12 +11,17 @@ matrix-prep
 
 matrix-ic
 
+matrix-hicnorm
+
 #matrix-estimated
 #
 matrix-stats
 
 compare-matrices
 compare-matrices-stats
+
+boundary-scores
+boundary-scores-pca
 
 domains
 

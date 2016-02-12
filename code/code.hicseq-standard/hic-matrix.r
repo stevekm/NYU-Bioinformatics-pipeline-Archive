@@ -1923,7 +1923,7 @@ op_domains <- function(cmdline_args)
     make_option(c("--flank-dist"), default=10, help="Local maxima neighborhood radius (in number of bins) [default \"%default\"]."),
     make_option(c("--track-dist"), default=10, help="Maximum distance (number of bins) from diagonal for track generation  [default=%default]."),
     make_option(c("--bins"), default="", help="Comma-separated bins to be highlighted [default \"%default\"]."),
-    make_option(c("--presentation"), default="detailed", help="Presentation style: detailed, heatmaps-only, compact [default \"%default\"].")
+    make_option(c("--presentation"), default="none", help="Presentation style: detailed, tracks [default \"%default\"].")
   )
   usage = 'hic-matrix.r domains [OPTIONS] MATRIX(tsv/RData)';
   
@@ -1961,58 +1961,58 @@ op_domains <- function(cmdline_args)
   n_matrices = dim(est$solObj)[1]
   n_rows = nrow(est$x)
   n_cols = ncol(est$x)
-  if (presentation=="tracks") {
-    n_panels = 10
-    a = n_rows/(n_panels*opt$'track-dist')
-    pdf(paste(out_dir,'/domains.pdf',sep=''),height=9,width=9*a)
-    par(mfrow=c(n_panels,1),mar=c(0.5,0.5,0.5,0.5))
-  } else { 
-    pdf(paste(out_dir,'/domains.pdf',sep=''))
-  }
-
-  # generate plots
-  if (opt$verbose) { write("Generating plots...",stderr()); }
-  I = as.integer(seq(1,n_rows,length.out=200))         # sample matrix for heatmap generation
-  for (ll in 1:n_matrices) {
-    if (opt$verbose) { write(paste('-- matrix #',ll,'...',sep=''),stderr()); }
-
-    if (presentation=="heatmaps_only") par(mfrow=c(1,1))
-    else if (presentation=="detailed") par(mfrow=c(2,2))
-
-    # preprocess input matrices
-    if (full_matrix==TRUE) { z = MatrixRotate45(est$solObj[ll,,],opt$'track-dist')
-    } else { z = est$solObj[ll,,] }
-    if (opt$'preprocess'=='none') z = log2(z+1)
-    if (ll==1) z1 = z
-    
-    # plot heatmap and domains
-    lmax = dom$E[,ll]
-    s0 = as.vector(dom$scores[[ll]][,opt$method])     # non-normalized boundary score
-    s = as.vector(dom$bscores[,ll])                   # normalized boundary score
-    enorm = which(lmax==1)/length(lmax)
-    if (presentation=="detailed") {
-      z1 = z1[I,I]; z1[z1<=0]=0; image(max(z1)-z1,main='Raw Hi-C heatmap')
-      rect(enorm[-length(enorm)],enorm[-length(enorm)],enorm[-1],enorm[-1],col=NULL,border='cyan',lwd=2)
-      z = z[I,I]; z[z<=0]=0; image(max(z)-z,main=substitute(paste('Estimated Hi-C matrix for ',lambda,'=',LAMBDA,sep=''),list(LAMBDA=round(est$lambdas[ll],3))))
-      rect(enorm[-length(enorm)],enorm[-length(enorm)],enorm[-1],enorm[-1],col=NULL,border='cyan',lwd=2)
-      plot(s,col='black',type='l',main='Boundary scores across chromosome',xlab='position (number of bins)',ylab='boundary score');
-      pp=s; pp[lmax==0]=NA; points(pp,col='cyan',pch=20,cex=1)
-      boxplot(s,n=10,main='Histogram of boundary scores',ylab='boundary score')
-    } else if (presentation=="tracks") {
-      image(z,xaxt='n',yaxt='n')
-      lines(seq(0,1,length.out=length(s0)),(s0-min(s0,na.rm=TRUE))/(max(s0,na.rm=TRUE)-min(s0,na.rm=TRUE)),col='green4')
-      lines(seq(0,1,length.out=length(s)),s,col='blue')
-      abline(v=(which(lmax==1)-1)/(length(lmax)-1),col='blue')
-      d = 1/n_rows
-      for (pp in bin_points) rect(pp-d/2,0,pp+d/2,0.02,col='purple',border='purple')
-    } else {
-      z = z[I,I]; z[z<=0]=0; image(max(z)-z,main=substitute(paste(lambda,'=',LAMBDA,sep=''),list(LAMBDA=round(est$lambdas[ll],3))),xaxt='n',yaxt='n')
-      rect(enorm[-length(enorm)],enorm[-length(enorm)],enorm[-1],enorm[-1],col=NULL,border='cyan',lwd=2)
-      for (pp in bin_points) draw.circle(pp,pp,0.02,col='blue',border='blue')
+  
+  if (presentation!="none") {
+    if (presentation=="tracks") {
+      n_panels = 10
+      a = n_rows/(n_panels*opt$'track-dist')
+      pdf(paste(out_dir,'/domains.pdf',sep=''),height=9,width=9*a)
+      par(mfrow=c(n_panels,1),mar=c(0.5,0.5,0.5,0.5))
+    } else { 
+      pdf(paste(out_dir,'/domains.pdf',sep=''))
     }
+ 
+    # generate plots
+    if (opt$verbose) { write("Generating plots...",stderr()); }
+    I = as.integer(seq(1,n_rows,length.out=200))         # sample matrix for heatmap generation
+    for (ll in 1:n_matrices) {
+      if (opt$verbose) { write(paste('-- matrix #',ll,'...',sep=''),stderr()); }
+
+      if (presentation=="heatmaps_only") par(mfrow=c(1,1))
+      else if (presentation=="detailed") par(mfrow=c(2,2))
+
+      # preprocess input matrices
+      if (full_matrix==TRUE) { z = MatrixRotate45(est$solObj[ll,,],opt$'track-dist')
+      } else { z = est$solObj[ll,,] }
+      if (opt$'preprocess'=='none') z = log2(z+1)
+      if (ll==1) z1 = z
     
+      # plot heatmap and domains
+      lmax = dom$E[,ll]
+      s0 = as.vector(dom$scores[[ll]][,opt$method])     # non-normalized boundary score
+      s = as.vector(dom$bscores[,ll])                   # normalized boundary score
+      enorm = which(lmax==1)/length(lmax)
+      if (presentation=="detailed") {
+        # TODO: this needs the full matrices to work properly...
+#        z1 = z1[I,I]; z1[z1<=0]=0; image(max(z1)-z1,main='Raw Hi-C heatmap')
+#        rect(enorm[-length(enorm)],enorm[-length(enorm)],enorm[-1],enorm[-1],col=NULL,border='cyan',lwd=2)
+#        z = z[I,I]; z[z<=0]=0; image(max(z)-z,main=substitute(paste('Estimated Hi-C matrix for ',lambda,'=',LAMBDA,sep=''),list(LAMBDA=round(est$lambdas[ll],3))))
+#        rect(enorm[-length(enorm)],enorm[-length(enorm)],enorm[-1],enorm[-1],col=NULL,border='cyan',lwd=2)
+#        plot(s,col='black',type='l',main='Boundary scores across chromosome',xlab='position (number of bins)',ylab='boundary score');
+#        pp=s; pp[lmax==0]=NA; points(pp,col='cyan',pch=20,cex=1)
+#        boxplot(s,n=10,main='Histogram of boundary scores',ylab='boundary score')
+      } else if (presentation=="tracks") {
+        image(z,xaxt='n',yaxt='n')
+        lines(seq(0,1,length.out=length(s0)),(s0-min(s0,na.rm=TRUE))/(max(s0,na.rm=TRUE)-min(s0,na.rm=TRUE)),col='green4')
+        lines(seq(0,1,length.out=length(s)),s,col='blue')
+        abline(v=(which(lmax==1)-1)/(length(lmax)-1),col='blue')
+        d = 1/n_rows
+        for (pp in bin_points) rect(pp-d/2,0,pp+d/2,0.02,col='purple',border='purple')
+      }
+    
+    }
+    dev.off()
   }
-  dev.off()
   
   if (opt$verbose) { write("Saving data...",stderr()); }
 
@@ -2026,7 +2026,9 @@ op_domains <- function(cmdline_args)
   # create boundary score files (all scoring methods) for each lambda
   for (k in 1:n_matrices) {
     f = paste(out_dir,'/all_scores.k=',formatC(k,width=3,format='d',flag='0'),'.tsv',sep='')
-    write.table(round(dom$scores[[k]],6),file=f,sep='\t',row.names=T,col.names=T,quote=F)
+    score_table = cbind(rownames(dom$scores[[k]]),round(dom$scores[[k]],6))
+    colnames(score_table) = c("locus",colnames(dom$scores[[k]]))
+    write.table(score_table,file=f,sep='\t',row.names=F,col.names=T,quote=F)
   }
     
   # store boundary score data (all lambdas in one file)    
@@ -2340,9 +2342,11 @@ op_compare <- function(cmdline_args)
     make_option(c("--max-lambda"), default=1.0, help="Maximum value for parameter lambda (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
     make_option(c("--n-lambda"), default=2, help="Number of lambdas (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
     make_option(c("--log2-lambda"), action="store_true",default=FALSE, help="Use log2 scale for lambda range (only applicable if estimated max-lambda was set to Inf)."),
-    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma (only applicable if estimated max-lambda was set to Inf) [default=%default].")
-  );
-  usage = 'hic-matrix.r compare [OPTIONS] MATRIX-1 MATRIX-2 (* matrices can be tsv or estimated RData)';
+    make_option(c("--gamma"), default=0.0, help="Value for sparsity parameter gamma (only applicable if estimated max-lambda was set to Inf) [default=%default]."),
+    make_option(c("--max-dist"), default=0, help="(Only for tsv files) Maximum distance from diagonal in number of bins [default \"%default\"]."),
+    make_option(c("--n-dist"), default=10, help="(Only for tsv files) Number of distances to be tested [default \"%default\"].")
+  )
+  usage = 'hic-matrix.r compare [OPTIONS] MATRIX-1 MATRIX-2 (* matrices can be tsv or estimated RData)'
   
   # get command line options (if help option encountered print help and exit)
   arguments <- parse_args(args=cmdline_args, OptionParser(usage=usage,option_list=option_list), positional_arguments=c(0,Inf));
@@ -2472,20 +2476,33 @@ op_compare <- function(cmdline_args)
 
   } else {
     # assume matrices are in tsv format
-    mat1 = as.matrix(read.table(files[1]))
-    mat2 = as.matrix(read.table(files[2]))
-    if (nrow(mat1)!=nrow(mat2)) { write('Error: different matrix sizes in samples!',stderr()); quit(save='no'); }
+    mat1 = as.matrix(read.table(files[1],row.names=1,check.names=F))
+    mat2 = as.matrix(read.table(files[2],row.names=1,check.names=F))
+    if ((nrow(mat1)!=nrow(mat2))||(ncol(mat1)!=ncol(mat2))) { write('Error: different matrix sizes in samples!',stderr()); quit(save='no'); }
 
     # replace NAs with 0
     mat1[is.na(mat1)] = 0
     mat2[is.na(mat2)] = 0
 
+    # distance from diagonal
+    max_dist = ncol(mat1)
+    if ((opt$"max-dist">0)&&(opt$"n-dist">0)) max_dist = min(max_dist,opt$"max-dist")
+    full_matrix = is_full_matrix(mat1)
+    D = abs(row(mat1)-col(mat1)) + 1
+
     # compute correlations
-    for (m in c("pearson","spearman")) {
-      c = cor(as.vector(mat1),as.vector(mat2),method=m)
-      x = cbind("0",c)
-      colnames(x) = c("lambda","correlation")
-      write.table(x,quote=FALSE,row.names=FALSE,sep='\t',file=paste(fout,'.cor.',m,'.tsv',sep=''))
+    methods = c("pearson","spearman")
+    distances = rev(as.integer(1:opt$"n-dist"*(max_dist/opt$"n-dist")))
+    for (m in methods) {
+      C = matrix(0,1,length(distances))
+      colnames(C) = c(paste("d=",distances,sep=''))
+      for (k in 1:length(distances)) {
+        d = distances[k]
+        C[k] = ifelse(full_matrix==TRUE,cor(as.vector(mat1[D<=d]),as.vector(mat2[D<=d]),method=m),cor(as.vector(mat1[,1:d]),as.vector(mat2[,1:d]),method=m))
+      }
+      C_table = cbind("0",round(C,4))
+      colnames(C_table) = c("lambda",colnames(C))
+      write.table(C_table,quote=FALSE,row.names=FALSE,sep='\t',file=paste(fout,'.cor.',m,'.tsv',sep=''))
     }
   }
   
