@@ -5,6 +5,10 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-heatmaps.tcsh [--dry-run]
 ##
 
+#TITLE: Heatmaps
+#XFIGUREX: clustering.png X Keep this disabled until convert code is added
+#PARAMS: params.mean.tcsh params.standard.tcsh
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err
