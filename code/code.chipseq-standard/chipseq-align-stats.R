@@ -1,53 +1,59 @@
 #!/usr/bin/Rscript
 
-## USAGE: alignment_summary_stats.R /path/to/outputdir /path/to/alignment/.../db.Rdata /path/to/projdir/alignment_results_dir
+## USAGE: Rscript ./code/chipseq-align-stats.R $outdir $branch "$objects"
 ## DESCRIPTION: create summary tables and dual barplots to visualize alignment reads
-## this script is called by scripts-alignment-summary.sh; don't invoke this script directly
+## 
 
 # get the script arguments
-args <- commandArgs()
+args <- commandArgs(TRUE)
 
-OutDir<-args[6]
-alignDB_filepath<-args[7]
-# AlignDir<-args[8]
-AlignResultsDir<-args[8]
-AlignDir<-dirname(path = AlignResultsDir)
+cat("R: dput args:") # for development
+cat("\n")
+cat(dput(args))
+cat("\n\n")
 
-# load the db.Rdata file
-# # create a new environment for it
-tmp_envir<-new.env()
-# load the data into it
-load(file =alignDB_filepath,envir =tmp_envir)
-# ls(tmp_envir) # check its contents
-obj_db<-tmp_envir$obj_db # # obj_db is the table with informaiton we need
+OutDir<-args[1]
+Branch<-args[2]
+Objects<-unlist(strsplit(args[3]," "))
 
-# preallocate vectors to hold each column we will need in the resulting stats table; this is fastest method
-Total_reads <- numeric(nrow(obj_db))
-Aligned_reads <- numeric(nrow(obj_db))
-De_dup_aligns <- numeric(nrow(obj_db))
-Sample_Name <- character(nrow(obj_db))
+cat("Outdir is ",OutDir,"",sep = "\n")
+cat("Branch is ",Branch,"",sep = "\n")
+cat("Objects is ","",sep = "\n")
+Objects
 
+# preallocate vectors to hold each column we will need in the resulting stats table
+Aligned_reads <- numeric(length(Objects))
+De_dup_aligns <- numeric(length(Objects))
+Sample_Name <- character(length(Objects))
+
+
+#
+##
+###
 # read in the stats for each alignment
-for(i in 1:nrow(obj_db)){
-  # sample's outdir location
-  SampleAlignOutdir<-as.character(obj_db[["out-dir"]][i])
-  # sample's stats sheet
-  SampleStatsSheet<-paste(AlignDir,SampleAlignOutdir,"stats.tsv",sep = "/")
+for(i in 1:length(Objects)){
+  # get the sample's stats sheet
+  SampleStatsSheet<-paste(Branch,as.character(Objects[i]),"stats.tsv",sep = "/")
+
   # add name of the sample to vector
-  Sample_Name[i]<-as.character(obj_db[["out-object"]][i])
-  
-  # add the values of the sample; ................................these names need to exist! ~~VVVVVVV
+  Sample_Name[i]<-as.character(Objects[i])
   Total_reads[i]<-read.table(file = SampleStatsSheet,header = F,sep = "\t",row.names = 1)["Total reads",][1]
   Aligned_reads[i]<-read.table(file = SampleStatsSheet,header = F,sep = "\t",row.names = 1)["Aligned reads",][1]
   De_dup_aligns[i]<-read.table(file = SampleStatsSheet,header = F,sep = "\t",row.names = 1)["De-duplicated alignments",][1]
   tmp_rownames<-row.names(read.table(file = SampleStatsSheet,header = F,sep = "\t",row.names = 1))
 }
 
+
 AlignmentStats<-data.frame(Total_reads,Aligned_reads,De_dup_aligns,row.names = Sample_Name)
 colnames(AlignmentStats)<-gsub(pattern = " ",replacement = ".",x = tmp_rownames) # no whitespace allowed in colnames!!
 
+cat("Alignment stats data frame is:",sep = "\n\n")
+AlignmentStats
 
-# calculate the percent alignment
+#
+##
+###
+# Calculate the percent alignment, etc.
 AlignmentStats[['Percent.Aligned.Reads']]<-signif(c(AlignmentStats[['Aligned.reads']] / AlignmentStats[['Total.reads']])*100,digits = 4 )
 # calculate the percent deduplicated
 AlignmentStats[['Percent.De-dup.Reads']]<-signif(c(AlignmentStats[['De-duplicated.alignments']] / AlignmentStats[['Total.reads']])*100,digits = 4 )
@@ -62,6 +68,9 @@ AlignmentStats[['Percent.Dup']]<-signif(c(AlignmentStats[['Duplicated']] / Align
 
 
 
+#
+##
+###
 # save the values to be plotted into a transposed matrix, since thats what the barplot() likes
 # # first just get the columns we want
 Dup_Raw_Reads_df<-AlignmentStats[,which(colnames(AlignmentStats) %in% c("De-duplicated.alignments","Duplicated","Unaligned.Reads")) ] 
@@ -78,9 +87,11 @@ Dup_Pcnt_Reads_df<-AlignmentStats[,which(colnames(AlignmentStats) %in% c("Percen
 Dup_Pcnt_Reads_df<-Dup_Pcnt_Reads_df[c("Percent.De-dup.Reads","Percent.Dup","Pcnt.Unaligned.Reads")]
 Dup_Pcnt_Reads_Matrix<-t(as.matrix(Dup_Pcnt_Reads_df))
 
-# #####################
-# # Set up the plots
-# 
+
+#
+##
+###
+# Set up the plots
 BARPLOT_COLORS<-c("blue","purple","red")
 
 # setup the matrix for the plot layout
@@ -92,15 +103,24 @@ Raw_Reads_Matrix_matrix<-structure(c(1L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L,
 
 # write a PDF of the plot
 pdf(file = paste0(OutDir,"/alignment_barplots.pdf"),width = 8,height = 8)
-layout(Raw_Reads_Matrix_matrix) # setup the panel layout
-par(mar=c(0,0,4,0)) # need to set this for some reason
-plot(1,type='n',axes=FALSE,xlab="",ylab="",main = "Sequencing Reads",cex.main=2) # call blank plot to fill the first panel
-legend("bottom",legend=c("Deduplicated","Duplicated","Unaligned"),fill=BARPLOT_COLORS,bty = "n",ncol=length(BARPLOT_COLORS),cex=1.0) # set up the Legend in the first panel
-par(mar=c(6,max(4.1,max(nchar(row.names(AlignmentStats)))/2.5),0,3)) # plot margins # c(bottom, left, top, right) # default is c(5, 4, 4, 2) + 0.1
-barplot(Dup_Raw_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Number of reads (millions)") # create barplot for the two matrices
+# setup the panel layout
+layout(Raw_Reads_Matrix_matrix) 
+# need to set this for some reason
+par(mar=c(0,0,4,0))
+# call blank plot to fill the first panel
+plot(1,type='n',axes=FALSE,xlab="",ylab="",main = "Sequencing Reads",cex.main=2) 
+# set up the Legend in the first panel
+legend("bottom",legend=c("Deduplicated","Duplicated","Unaligned"),fill=BARPLOT_COLORS,bty = "n",ncol=length(BARPLOT_COLORS),cex=1.0)
+# plot margins # c(bottom, left, top, right) # default is c(5, 4, 4, 2) + 0.1
+par(mar=c(6,max(4.1,max(nchar(row.names(AlignmentStats)))/1.5),0,3)+ 0.1) 
+# create barplot for the two matrices
+barplot(Dup_Raw_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Number of reads (millions)") 
 barplot(Dup_Pcnt_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Percent of reads")
 dev.off()
 
+#
+##
+###
 # write a CSV of the final table
 # # peel off the rownames into a separate vector
 SampleName<-row.names(AlignmentStats)
