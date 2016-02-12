@@ -5,6 +5,11 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-diffbind.tcsh [--dry-run]
 ##
 
+#TITLE: DiffBind
+#DESCRIPTION: 
+#FIGURE: 
+#SHEET: 
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err
