@@ -43,7 +43,9 @@ set K = `ls -1 $outdir/*/table.k=*.tsv | sed 's/.*\/table.k=//' | cut -d'.' -f1 
 foreach k ($K)
   set t = table.k=$k.tsv
   cat $outdir/*/$t | head -1 >! $outdir/$t
-  cat $outdir/*/$t | sed '1d' >> $outdir/$t
+  foreach tt ($outdir/*/$t)
+    cat $tt | sed '1d' >> $outdir/$t
+  end
   cat $outdir/$t | sed '1d' | cut -f-2 | awk '$2==1' | cut -f1 | tr ':-' '\t' | gtools-regions shiftp -5p -1 -3p 0 >! $outdir/boundary_gain.k=$k.bed
   cat $outdir/$t | sed '1d' | cut -f-2 | awk '$2==-1' | cut -f1 | tr ':-' '\t' | gtools-regions shiftp -5p -1 -3p 0 >! $outdir/boundary_loss.k=$k.bed  
 end
