@@ -7,7 +7,8 @@
 # get the script arguments
 args <- commandArgs(TRUE)
 
-cat("R: dput args:") # for development
+
+cat("R: dput args:") # for development & troubleshooting
 cat("\n")
 cat(dput(args))
 cat("\n\n")
@@ -22,6 +23,7 @@ cat("Objects is ","",sep = "\n")
 Objects
 
 # preallocate vectors to hold each column we will need in the resulting stats table
+Total_reads <- numeric(length(Objects))
 Aligned_reads <- numeric(length(Objects))
 De_dup_aligns <- numeric(length(Objects))
 Sample_Name <- character(length(Objects))
