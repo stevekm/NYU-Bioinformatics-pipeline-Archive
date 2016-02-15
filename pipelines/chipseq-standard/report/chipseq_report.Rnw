@@ -243,9 +243,8 @@ done
 
 @
 
-
 % make the report
-<<sample1,results='asis',echo=FALSE,eval=TRUE>>=
+<<sample_sheet,results='asis',echo=FALSE,eval=TRUE>>=
 # print the sample sheet
 PipelineSampleSheet<-read.table(file = paste(Pipeline_dir,"inputs","sample-sheet.tsv",sep = "/"),header = T,sep = "\t" )
 
@@ -257,7 +256,20 @@ cat("\\end{frame}\n\n")
 
 # example  
 # a <- initial_data[grep("^OFB[0-9]+", names(initial_data))]   # nice regex example here
+@
+%
+<<default_params,results='asis',echo=FALSE,eval=TRUE>>=
+# print the default params
 
+DefaultInputParams_filepath<-paste(getwd(),"pipeline", "inputs", "params","params.tcsh", sep="/")
+DefaultInputParams<-scan(file = DefaultInputParams_filepath,character(0), sep = "\n")
+     cat("\\begin{frame}{", latexTranslate("Default Pipeline Parameters"), " Parameters}\n", sep="")
+     cat("\\scriptsize{",cat(latexTranslate(DefaultInputParams),sep = "\n\n"),"}\n",sep = "")
+     cat("\\end{frame}\n\n")
+
+@
+%
+<<generate_report,results='asis',echo=FALSE,eval=TRUE>>=
 
 # iterate over the pipeline index
 # Pipeline_Index<-c("align")#,"align-stats","qc","peaks","peaktable","matrices","pca","heatmaps","peakdiff")
