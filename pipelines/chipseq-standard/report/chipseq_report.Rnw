@@ -293,9 +293,6 @@ for(i in Pipeline_Index){
 % \begin{frame}{System and Session Information}
 % \begin{frame}[fragile]{System and Session Information}
 <<Session>>=
-# getwd() # R pwd
-system('pwd',intern = T) # bash pwd
-# system('ls ../../',intern = T)
 system('uname -srv',intern=T)
 sessionInfo()
 @
