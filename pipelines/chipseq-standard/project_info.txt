@@ -1,0 +1,11 @@
+PROJECT-DIR: /project/dir
+
+PROJECT-ID: Project_ID_ChIP-Seq
+
+PROJECT-ID-SHORT: ChIP-Seq_ID
+
+REPORT-AUTHOR: Stephen M. Kelly
+
+REPORT-AUTHOR-EMAIL: stephen.kelly@nyumc.org
+
+PI-NAME: Dr. X

@@ -5,6 +5,11 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-qc.tcsh [--dry-run]
 ##
 
+#TITLE: Quality Control
+#DESCRIPTION: Check the samples for quality control analysis.
+#FIGURE: chip-fingerprint.pdf
+#PARAMS: params.default.tcsh
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err

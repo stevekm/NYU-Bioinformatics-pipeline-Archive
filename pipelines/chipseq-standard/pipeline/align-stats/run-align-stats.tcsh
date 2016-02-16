@@ -2,12 +2,13 @@
 source ./code/code.main/custom-tcshrc      # customize shell environment
 
 ##
-## USAGE: run-heatmaps.tcsh [--dry-run]
+## USAGE: run-align-stats.tcsh [--dry-run]
 ##
 
-#TITLE: Heatmaps
-#XFIGUREX: clustering.png X Keep this disabled until convert code is added
-#PARAMS: params.mean.tcsh params.standard.tcsh
+#TITLE: Alignment Summary Stats
+#DESCRIPTION: Create barplots to show the number of reads that are aligned versus unaligned. 
+#FIGURE: alignment_barplots.pdf
+#SHEET: alignment_stats_extended.csv
 
 # process command-line inputs
 if ($#argv > 1) then
@@ -18,9 +19,9 @@ endif
 set opt = "$1"
 
 # setup
-set op = heatmaps
-set inpdirs = "inpdirs/matrices"
-set filter = "/matrices.[^/]*.nbins_[0-9][0-9]"
+set op = align-stats
+set inpdirs = "inpdirs/*"
+set filter = ""
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="
@@ -28,7 +29,7 @@ set resources = 1
 set cmd = "./code/code.main/scripts-qsub-wrapper $resources ./code/chipseq-$op.tcsh"
 
 # generate run script
-Rscript ./code/code.main/pipeline-master-explorer.r -v --filter-branch="$filter" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "" "*" 1
+Rscript ./code/code.main/pipeline-master-explorer.r -v -F "$filter" "$cmd" $results/$op "params/params.*.tcsh" "$inpdirs" "chip" "*" 1
 
 # run and wait until done!
 if ("$opt" != "--dry-run") scripts-submit-jobs ./$results/.db/run
