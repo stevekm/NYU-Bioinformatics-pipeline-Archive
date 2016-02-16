@@ -2,7 +2,7 @@
 
 source ./inputs/params/params.tcsh
 
-module unload gcc               # TODO: remove all these when mirnylib is properly installed
+module unload gcc               # this is necessary in order to take care of module conflicts in our system
 module unload python
 module load python/2.7.3
 

@@ -35,3 +35,4 @@ hicplotter
 interactions
 
 annotations
+annotations-stats

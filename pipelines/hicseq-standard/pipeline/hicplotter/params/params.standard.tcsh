@@ -2,19 +2,36 @@
 
 source ./inputs/params/params.tcsh
 
+# HiCplotter path
+set hicplotter_path = ./code/HiCPlotter2.py
+
+# create bedgraphs for boundary scores
+set bscores_branch = ../boundary-scores/results/boundary-scores.by_sample.standard/`echo $branch | sed 's/.*results\///'`
+set cell_type = `echo $objects[1] | cut -d'-' -f1`
+set f = $bscores_branch/$objects[1]/all_scores.k=001.tsv
+set methods = (intra-max DI ratio)
+set bedgraphs = ()
+set bedgraph_labels = ($methods)
+foreach m ($methods)
+  set k = `head -1 $f | tr '\t' '\n' | grep -n "^$m"'$' | cut -d':' -f1`
+  cat $f | sed '1d' | cut -f1,$k | sed 's/:/\t/' | sed 's/-/\t/' >! $outdir/bscores.$m.bedGraph
+  set bedgraphs = ($bedgraphs $outdir/bscores.$m.bedGraph)
+end
+
+# add CTCF ChIP-seq
+if (-e inputs/data.external/$cell_type/CTCF.bedGraph) then
+  set bedgraphs = ($bedgraphs inputs/data.external/$cell_type/CTCF.bedGraph)
+  set bedgraph_labels = ($bedgraph_labels CTCF)
+endif
+
 # regions to plot
-set regions = "chr10:10000000-15000000 chr10:5000000-10000000 chr10:6000000-8000000"
-set bedgraphs = "/ifs/home/cl3011/ROTATION_3/Resources/Software/HiCPlotter/data/CUTLL1-DMSO-CTCF-rep1.bedGraph"
-set bedgraph_labels = "CUTLL1-DMSO-CTCF"
-set highlight = 0
-set highlight_bed = "/ifs/home/cl3011/wrappers/hicplotter_test/highlight.bed"
-set loop_bed = "/ifs/home/cl3011/wrappers/hicplotter_test/looplist.bed"
-set histogram_type = 0     # Provide comma-separated values if you have more than one
-set histogram_height = 100 # Provide comma-separated values if you have more than one
+set regions = "chr8:125000000-133000000"
+set tiles = "params/regions.bed"
+set tiles_labels = "regions"
+set highlight = 1
+set highlight_bed = "params/highlight.bed"
 set fileheader = 0         # Either 1 or 0 (header / no header)
 set insulation_score = 0   # Either 1 or 0 (include insulation index or not)
-set hicplotter_path = "/ifs/home/cl3011/wrappers/hicplotter_test"
-set hicplotter_matrix_path = "/ifs/home/cl3011/wrappers/hicplotter_test/code2"
-set pdftk_path = "/usr/bin"
+
 
 

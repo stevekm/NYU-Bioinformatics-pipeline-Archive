@@ -24,3 +24,4 @@ prefix <- paste(kappa, chrom, sep=".")
 # the window size and the prefix
 # as arguments
 TopDom(matrix.file=sprintf("%s", input_matrix), window.size=window_size, sprintf("%s", prefix))
+

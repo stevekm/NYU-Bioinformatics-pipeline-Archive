@@ -57,13 +57,14 @@ foreach est_mat ($est_matrices)
   foreach mat ($workdir/tmp/matrix.*.tsv)
     set pref = `basename $mat .tsv | sed 's/^matrix\.//'`.$chr
     set inpmat = $pref.matrix.txt
-    Rscript $hicplotter_matrix_path/create-hicplotter-matrix.r $workdir/$inpmat $mat 
+    Rscript ./code/create-hicplotter-matrix.r $workdir/$inpmat $mat 
   end
   rm -rf $workdir/tmp
 end
 
 # Run hicplotter
 # Go through the regions
+set loop_bed = ""
 foreach region ($regions)
   echo $region
   set chrom = `echo $region | cut -d':' -f1`
@@ -71,10 +72,20 @@ foreach region ($regions)
   set stop = `echo $region | cut -d'-' -f2`
   set start_bin = `echo $start/$bin_size | bc`
   set stop_bin = `echo $stop/$bin_size | bc`
-  set bedgraphs_csv = `echo $bedgraphs | sed 's/ /,/g'`
-  set bedgraph_labels_csv = `echo $bedgraph_labels | sed 's/ /,/g'`
   set hic_matrices = `cd $workdir; ls -1 *.matrix.txt | grep -w $chrom | tr '\n' ' '`
   set hic_matrix_no = `echo $hic_matrices | tr ' ' '\n' | wc -l`
+  set bedgraphs2 = ()
+  foreach b ($bedgraphs)
+    set bedgraphs2 = ($bedgraphs2 `readlink -f $b`)
+  end
+  set bedgraphs_csv = `echo $bedgraphs2 | sed 's/ /,/g'`
+  set bedgraph_labels_csv = `echo $bedgraph_labels | sed 's/ /,/g'`
+  set tiles2 = ()
+  foreach t ($tiles)
+    set tiles2 = ($tiles2 `readlink -f $t`)
+  end
+  set tiles_csv = `echo $tiles2 | sed 's/ /,/g'`
+  set tiles_labels_csv = `echo $tiles_labels | sed 's/ /,/g'`
 
   #Get the region labels
   set region_labels = ()
@@ -84,30 +95,32 @@ foreach region ($regions)
   set all_bedgraphs = ()
   #Get all bedgraph labels
   set all_bedgraph_labels = ()
-  #Get histogram type
-  set all_histogram_types = ()
-  #Get histogram heights
-  set all_histogram_heights = ()
+  #Get all bedgraphs
+  set all_tiles = ()
+  #Get all bedgraph labels
+  set all_tiles_labels = ()
 
   foreach i ( `seq 1 1 $hic_matrix_no` )
     set region_labels = ( $region_labels $region )
     set loop_beds = ( $loop_beds $loop_bed )
     set all_bedgraphs = ( $all_bedgraphs $bedgraphs_csv )
     set all_bedgraph_labels = ( $all_bedgraph_labels $bedgraph_labels_csv )
-    set all_histogram_types = ( $all_histogram_types $histogram_type  )
-    set all_histogram_heights = ( $all_histogram_heights $histogram_height )
+    set all_tiles = ( $all_tiles $tiles_csv )
+    set all_tiles_labels = ( $all_tiles_labels $tiles_labels_csv )
   end
 
   #Run HiC-Plotter
   set p = `pwd`
+  set highlight_bed_path = `readlink -f $highlight_bed`
+  set hicplotter_abs_path = `readlink -f $hicplotter_path`
   cd $workdir
-  python $hicplotter_path/HiCPlotter2.py -v -f $hic_matrices -n $region_labels -chr $chrom -s $start_bin -e $stop_bin -r $bin_size -o $region -hist $all_bedgraphs -hl $all_bedgraph_labels -fhist $all_histogram_types -hm $all_histogram_heights -fh $fileheader -pi $insulation_score #-high $highlight -hf $highlight_bed -peak $loop_beds
+  python $hicplotter_abs_path -v -f $hic_matrices -n $region_labels -chr $chrom -s $start_bin -e $stop_bin -r $bin_size -o $region -t $all_tiles -tl $all_tiles_labels -hist $all_bedgraphs -hl $all_bedgraph_labels -fh $fileheader -pi $insulation_score -high $highlight -hf $highlight_bed_path  
   cd $p
 end
 
 # Get all the regions in one .pdf
 foreach f (`cd $workdir; ls -1 chr*.pdf`)
-  mv $workdir/$f $outdir/`echo $f | tr ':' ' ' | tr '-' ' ' | awk -F" " '{print $1":"$2"-"$3}'`.pdf
+  mv -f $workdir/$f $outdir/`echo $f | tr ':' ' ' | tr '-' ' ' | awk -F" " '{print $1":"$2"-"$3}'`.pdf
 end
 
 # Set the pdfs in order

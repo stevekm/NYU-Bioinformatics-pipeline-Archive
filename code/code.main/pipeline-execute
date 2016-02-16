@@ -13,5 +13,5 @@ endif
 set project = $1
 set email = $2
 
-qsub -cwd -m e -M $email -N $project ./run
+qsub -cwd -m be -M $email -N $project ./run
 
