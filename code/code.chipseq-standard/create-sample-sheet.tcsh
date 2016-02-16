@@ -41,6 +41,7 @@ foreach sample ($samples)
       set fastq2 = NA
     endif
   endif
+  if ("$fastq2" == "") set fastq2 = NA
   if (($fraglen != "") || ($fraglen != "auto")) then
     set frag = $fraglen
   else

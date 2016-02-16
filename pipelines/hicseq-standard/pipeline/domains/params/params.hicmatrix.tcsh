@@ -9,7 +9,7 @@ set chrom_excluded = 'chr[MY]'
 set hicmatrix_params = ( \
 --min-lambda=0.0 --max-lambda=1.0 --n-lambda=6 --gamma=0 \
 --preprocess=none \
---method=novel-max \
+--method=ratio \
 --distance=`echo 500000/$bin_size | bc` \
 --distance2=`echo 500000/$bin_size | bc` \
 --skip-distance=0 \

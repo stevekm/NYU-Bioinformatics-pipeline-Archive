@@ -12,10 +12,10 @@ usage = 'pipeline-master-explorer.r [OPTIONS] SCRIPT OUTDIR-PREFIX PARAM-SCRIPTS
 ##
 check_status = function(v)
 {
-  missing = min(file.exists(v["inp-branch"]))==0
+  missing = min(file.exists(v["inp-branch"]))==FALSE
   if (missing==TRUE) return("missing-inputs")
   inp_files = paste(v["inp-branch"],unlist(strsplit(v["inp-object"],split="[, ]")),sep='/')
-  if (v["inp-object"]=="") inp_files = Sys.glob(paste(inp_files,"*",sep="/"))
+  if (v["inp-object"]=="") inp_files = Sys.glob(paste(inp_files,"*",sep="/"))                     # TODO: inp-objects should be explicitly listed (under development), so theoretically this will become obsolete
   inp_files = c(inp_files, v["params"])
   missing = min(file.exists(inp_files))==0
   if (missing==TRUE) return("missing-inputs")
@@ -84,7 +84,7 @@ generate_command <- function(v)
 ## combn_obj
 ##
 combn_obj = function(mat,tuples) {
-  mat1 = aggregate(mat,by=list(mat[,"out-object"]),FUN=function(x) paste(unique(x),collapse=','))[-1]                                 # aggregate entries by output-object
+  mat1 = aggregate(mat,by=list(mat[,"out-object"]),FUN=function(x) paste(unique(x),collapse=','))[-1]                                   # aggregate entries by output-object
   if (tuples>0) {
     inp_obj_grid = as.matrix(expand.grid(rep(list(mat1[,"inp-object"]),tuples)))                                                        # (input-objects)^N
     out_obj_grid = as.matrix(expand.grid(rep(list(mat1[,"out-object"]),tuples)))                                                        # (output-objects)^N
@@ -226,11 +226,9 @@ if (length(obj_db)==0) {
 
 # check if out-object-variable is "*" (i.e. all input objects are grouped)
 if ((out_obj_vars=="*")&&(split_var=="")) {
-  obj_db[,"inp-obj-var"] = "."
-  obj_db[,"inp-object"] = ""
-  obj_db = unique(obj_db)
-  obj_db = cbind(obj_db,"out-obj-var"="*","split-var"="","split-value"="","out-object"="all-samples")
-
+  obj_db = aggregate(obj_db[,c("inp-branch","inp-object")],by=list(obj_db[,"inp-branch"]),FUN=function(x) paste(unique(x),collapse=','))[-1]         # aggregate input objects by input branch
+  obj_db = cbind(obj_db,"inp-obj-var"=".","out-obj-var"="*","split-var"="","split-value"="","out-object"="all-samples")
+  
 # check if out-object-variable is "." (i.e. output objects are the same as input objects)
 } else if (out_obj_vars==".") {
   if (split_var!="") write("Warning: split-var is ignored!",stderr())                           # TODO: create separate case for split-var!=""

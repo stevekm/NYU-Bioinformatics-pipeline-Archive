@@ -1146,7 +1146,7 @@ op_stats <- function(cmdline_args)
   pdf(paste(out_dir,'/stats.pdf',sep=''))
   colors = c('blue','green4','red','magenta','yellow','cyan','brown','pink','orange','gray','black','purple')
   colors = rep(colors,ceiling(nrow(D)/length(colors)))[1:nrow(D)]
-  par(mfrow=c(2,1))
+  par(mfrow=c(2,1),mar=c(2,4,2,2))
   ylim = c(min(D[D>0]),max(D))
   d = (1:ncol(D))*bin_size/1000
   plot(d,D[1,],type='l',col=colors[1],log="xy",xlab='distance (kb)',ylab='Average normalized Hi-C count',main='Hi-C count as a function of distance',ylim=ylim)
