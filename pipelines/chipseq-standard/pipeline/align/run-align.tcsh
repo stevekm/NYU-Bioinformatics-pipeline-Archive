@@ -5,10 +5,12 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-align.tcsh [--dry-run]
 ##
 
+# ~~~ Entries for auto-report ~~~ #
 #TITLE: Alignment
 #DESCRIPTION: This step takes fastq files as input for each sample, and perform alignment using different aligners according to the specified parameter files.
-#FIGURE: 
-#SHEET: 
+#FIGURE:
+#SHEET:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # process command-line inputs
 if ($#argv > 1) then

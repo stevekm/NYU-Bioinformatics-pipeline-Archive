@@ -5,9 +5,11 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-heatmaps.tcsh [--dry-run]
 ##
 
+# ~~~ Entries for auto-report ~~~ #
 #TITLE: Heatmaps
-#XFIGUREX: clustering.png X Keep this disabled until convert code is added
+#XFIGUREX: clustering.png #Keep this disabled until convert code is added
 #PARAMS: params.mean.tcsh params.standard.tcsh
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # process command-line inputs
 if ($#argv > 1) then
