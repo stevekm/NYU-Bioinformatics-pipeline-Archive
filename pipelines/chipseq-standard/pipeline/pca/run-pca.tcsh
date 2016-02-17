@@ -5,10 +5,12 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-pca.tcsh [--dry-run]
 ##
 
+# ~~~ Entries for auto-report ~~~ #
 #DESCRIPTION: This step of the pipeline performs PCA.
 #TITLE: PCA
 #FIGURE: report_qnorm_page3.pdf
 #PARAMS: params.standard.tcsh
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # process command-line inputs
 if ($#argv > 1) then

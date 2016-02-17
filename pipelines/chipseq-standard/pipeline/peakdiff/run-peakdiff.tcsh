@@ -5,6 +5,13 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-peakdiff.tcsh [--dry-run]
 ##
 
+# ~~~ Entries for auto-report ~~~ #
+#DESCRIPTION:
+#TITLE: PeakDiff
+#FIGURE:
+#PARAMS:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 # process command-line inputs
 if ($#argv > 1) then
   grep '^##' $0 | scripts-send2err

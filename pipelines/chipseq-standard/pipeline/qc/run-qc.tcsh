@@ -5,10 +5,13 @@ source ./code/code.main/custom-tcshrc      # customize shell environment
 ## USAGE: run-qc.tcsh [--dry-run]
 ##
 
+# ~~~ Entries for auto-report ~~~ #
 #TITLE: Quality Control
-#DESCRIPTION: Check the samples for quality control analysis.
+#DESCRIPTION: Check the samples for quality control analysis, produce fingerprint plots.
 #FIGURE: chip-fingerprint.pdf
 #PARAMS: params.default.tcsh
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 
 # process command-line inputs
 if ($#argv > 1) then
