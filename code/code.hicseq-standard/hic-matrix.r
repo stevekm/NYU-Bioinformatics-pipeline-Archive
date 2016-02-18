@@ -215,7 +215,7 @@ MatrixBoundaryScores <- function(x,distance,d2,skip,ignore)
   x[abs(row(x)-col(x))>distance] = 0   # values beyond distance cutoff are set to zero
   if (d2<=0) d2 = distance
   n = nrow(x)
-  labels = c('intra-left','intra-right','intra-max','intra-min','inter','diff','DI','DI2','ratio','diffratio','novel-max','novel-min')
+  labels = c('intra-left','intra-right','intra-max','intra-min','inter','diff','DI','ratio','diffratio','novel-max','novel-min')
   scores = matrix(0,n,length(labels))
   colnames(scores) = labels
   rownames(scores) = rownames(x)
@@ -240,7 +240,7 @@ MatrixBoundaryScores <- function(x,distance,d2,skip,ignore)
       xright = x[Iright,Iright]                                   # right-of-boundary square
       subset = (row(xright)-col(xright)>=skip)&(col(xright)<=d2)  # submatrix
       intra_right = mean(xright[subset])                          # mean of values in right triangle
-      intra_right1 = mean(xright[1,(skip+1):distance])            # use only 1D, not full triangle 
+      intra_right1 = mean(xright[1,(skip+1):distance])            # use only 1-dimensional vector, not full triangle 
     }
     # scores at boundary
     Ibound = (i-distance+1):(i-1)
@@ -262,7 +262,6 @@ MatrixBoundaryScores <- function(x,distance,d2,skip,ignore)
     scores[i,'inter'] = inter                                     # mean of values at boundary square
     scores[i,'diff'] = diff
     scores[i,'DI'] = ifelse(diff1==0,0,diff1*abs(diff1)/(intra_left1+intra_right1))     # directionality index (Ren 2012)
-    scores[i,'DI2'] = ifelse(diff==0,0,diff*abs(diff)/(intra_left+intra_right))         # directionality index (Ren 2012) (2D version)
   }
 
   # compute regularized ratios
@@ -1917,7 +1916,7 @@ op_domains <- function(cmdline_args)
     make_option(c("--distance"), default=5, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
     make_option(c("--distance2"), default=0, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
     make_option(c("--skip-distance"), default=1, help="Distance from diagonal (in number of bins) to be skipped [default \"%default\"]."),
-    make_option(c("--method"), default="ratio", help="Boundary score method: ratio, diffratio, intra, inter, diff, DI, DI2 [default \"%default\"]."),
+    make_option(c("--method"), default="ratio", help="Boundary score method: ratio, diffratio, intra-max, intra-min, intra-right, intra-left, inter, diff, DI [default \"%default\"]."),
     make_option(c("--tolerance"), default=0.01, help="Percent difference cutoff for merging local maxima [default \"%default\"]."),
     make_option(c("-a","--alpha"), default=0.10, help="Minimum difference by which local maxima are greater than neighboring values [default \"%default\"]."),
     make_option(c("--flank-dist"), default=10, help="Local maxima neighborhood radius (in number of bins) [default \"%default\"]."),
@@ -2139,7 +2138,7 @@ op_domain_diff <- function(cmdline_args)
     make_option(c("--distance"), default=5, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
     make_option(c("--distance2"), default=0, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
     make_option(c("--skip-distance"), default=1, help="Distance from diagonal (in number of bins) to be skipped [default \"%default\"]."),
-    make_option(c("--method"), default="ratio", help="Boundary score method: ratio, diffratio, intra, inter, diff, DI, DI2 [default \"%default\"]."),
+    make_option(c("--method"), default="ratio", help="Boundary score method: ratio, diffratio, intra-max, intra-min, intra-right, intra-left, inter, diff, DI [default \"%default\"]."),
     make_option(c("--tolerance"), default=0.01, help="Percent difference cutoff for merging local maxima [default \"%default\"]."),
     make_option(c("--alpha"), default=0.25, help="Minimum difference by which local maxima are greater than neighboring values [default \"%default\"]."),
     make_option(c("--delta"), default=0.25, help="Minimum difference for calling differential boundaries [default \"%default\"]."),
