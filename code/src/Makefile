@@ -21,7 +21,10 @@ LIB = -L$(LIBDIR) -lbam -lm -lz -lgslcblas -lgsl
 
 # Explicit rules
 
-all: hic-matrix gtools-hic gtools-overlaps gtools-regions gtools-scans gtools-threaded tools-cols tools-key-expand tools-mergeuniq tools-matrix tools-matrix2 tools-rows tools-table tools-vectors
+all: pre-build hic-matrix gtools-hic gtools-overlaps gtools-regions gtools-scans gtools-threaded tools-cols tools-key-expand tools-mergeuniq tools-matrix tools-matrix2 tools-rows tools-table tools-vectors
+
+pre-build:
+	mkdir -p $(BINDIR)
 
 lbam:
 	cd samtools; make libbam.a; cd ..
