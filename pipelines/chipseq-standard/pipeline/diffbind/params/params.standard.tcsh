@@ -2,6 +2,10 @@
 
 source ./inputs/params/params.tcsh
 
-set group_var = 'group'
-set diffbind_param = ''
+module unload r
+module load r/3.2.3
+
+set diffbind_factor = 'group'
+set diffbind_blocking_factor = ''
+
 
