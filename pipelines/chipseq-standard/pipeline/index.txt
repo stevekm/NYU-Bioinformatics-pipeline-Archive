@@ -1,4 +1,5 @@
 align
+align-stats
 
 qc
 
@@ -12,3 +13,5 @@ pca
 heatmaps
 
 peakdiff
+diffbind
+

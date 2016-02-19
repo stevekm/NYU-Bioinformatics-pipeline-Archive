@@ -35,19 +35,32 @@ scripts-create-path $outdir/
 # -----  MAIN CODE BELOW --------------
 # -------------------------------------
 
+echo "sheet: $sheet"
+echo "genome: $genome"
+echo "branch: $branch"
+#echo "group_var: $group_var"
+echo "diffbind_factor: $diffbind_factor"
+# optional blocking factor (for paired analysis)
+echo "diffbind_blocking_factor: $diffbind_blocking_factor"
+
 # setup sample sheet for diffbind
 set diffbind_sample_sheet = $outdir/diffbind-sample-sheet.csv
-echo "header-info..." >! $diffbind_sample_sheet
+echo "SampleID,Tissue,Factor,Condition,Treatment,Replicate,bamReads,bamControl,Peaks,PeakCaller" >! $diffbind_sample_sheet
 foreach obj ($objects)
   set treatment_bam = `cat $branch/$obj/job.vars.tsv | grep "^treatment_aln	" | cut -f2`
   set control_bam = `cat $branch/$obj/job.vars.tsv | grep "^control_aln	" | cut -f2 | sed 's/^.* //'`
   set macs_peaks_xls = $branch/$obj/macs_peaks.xls
-  set obj_group = `./code/read-sample-sheet.tcsh $sheet $obj $group_var`
-  echo "$obj,$treatment_bam,$control_bam,$macs_peaks_xls,$obj_group" >> $diffbind_sample_sheet
+  set db_factor = `./code/read-sample-sheet.tcsh $sheet $obj $diffbind_factor`
+  if ("$diffbind_blocking_factor" == "") then
+    set db_block_factor = ""
+  else
+    set db_block_factor = `./code/read-sample-sheet.tcsh $sheet $obj $diffbind_blocking_factor`
+  endif
+  echo "$obj,?,?,$db_factor,?,$db_block_factor,$treatment_bam,$control_bam,$macs_peaks_xls,macs" >> $diffbind_sample_sheet
 end
 
-# run diffbind
-# TODO: remember to use diffbind_param variable (which is set in the params.standard.tcsh script), instead of hard-coding the params. 
+Rscript --vanilla ./code/scripts-diffbind.r $outdir $diffbind_sample_sheet $genome $diffbind_blocking_factor
+
 
 
 # -------------------------------------
