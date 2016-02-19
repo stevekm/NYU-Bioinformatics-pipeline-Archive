@@ -1,6 +1,6 @@
 # NYU GTC Bioinformatic Analysis Pipelines
 
-This is the main repository for THE bioinformatic pipelines. 
+This is the main repository for THE bioinformatics pipelines. 
 
 ## Setup
 Start a new project with 
