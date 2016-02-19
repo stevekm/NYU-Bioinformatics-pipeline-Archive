@@ -1,6 +1,7 @@
 #!/bin/tcsh
 
 # load all tools
+module unload gcc
 module unload samtools
 module unload java
 module unload r
