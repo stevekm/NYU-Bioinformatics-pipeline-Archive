@@ -135,7 +135,7 @@ cat("Space_scale is ",Space_scale,sep = "\n")
 ###
 # write a PDF of the plot
 # pdf(file = paste0(OutDir,"/alignment_barplots",mar_divisor,"-",mar_widthLeft,".pdf"),width = 8,height = 8) # ORIGINAL
-pdf(file = paste0(OutDir,"/alignment_barplots",mar_divisor,"-",mar_widthLeft,".pdf"),width = 8,height = 9)
+pdf(file = paste0(OutDir,"/alignment_barplots.pdf"),width = 8,height = 9)
 
 # setup the panel layout
 layout(Raw_Reads_Matrix_matrix) 
