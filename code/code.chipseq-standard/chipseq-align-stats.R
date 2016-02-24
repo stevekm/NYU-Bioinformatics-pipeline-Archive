@@ -89,7 +89,6 @@ Dup_Pcnt_Reads_df<-AlignmentStats[,which(colnames(AlignmentStats) %in% c("Percen
 Dup_Pcnt_Reads_df<-Dup_Pcnt_Reads_df[c("Percent.De-dup.Reads","Percent.Dup","Pcnt.Unaligned.Reads")]
 Dup_Pcnt_Reads_Matrix<-t(as.matrix(Dup_Pcnt_Reads_df))
 
-
 #
 ##
 ###
@@ -103,8 +102,41 @@ Raw_Reads_Matrix_matrix<-structure(c(1L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L,
                                    .Dim = c(11L,4L), 
                                    .Dimnames = list(NULL, c("V1", "V2", "V3", "V4")))
 
+
+# calculate some values for the figure margins
+# based on the nchar() of the longest rowname, divided by a value
+mar_divisor<-2.5
+mar_widthLeft<-signif(
+  max(4.1,
+      max(nchar(row.names(AlignmentStats)))/mar_divisor),
+  4) # 65 is too much # this may not work in RStudio but should work in pdf() or command line R 
+
+
+# calculate value for the plot label scaling factor
+# Names_scale<-min(0.7, 
+#                max(nchar(row.names(AlignmentStats)))*.0075) # works alright up to 88 char's samplenames # this doesn't work as well, needs more tweaking
+# ^ this also causes tiny labels for short names, too small, need both max and min cutoffs??
+Names_scale<-0.7
+# scaling factor for space between bars
+Space_scale<-max(0.2, # default setting
+                 nrow(AlignmentStats)*.01) # needs to work with up to 61
+
+
+cat("The longest sample name is ",max(nchar(row.names(AlignmentStats))),sep = "\n")
+cat("The number of samples is ",nrow(AlignmentStats),sep = "\n")
+
+
+cat("mar_widthLeft is ",mar_widthLeft,"",sep = "\n")
+cat("Names_scale is ",Names_scale,"",sep = "\n")
+cat("Space_scale is ",Space_scale,sep = "\n")
+
+#
+##
+###
 # write a PDF of the plot
-pdf(file = paste0(OutDir,"/alignment_barplots.pdf"),width = 8,height = 8)
+# pdf(file = paste0(OutDir,"/alignment_barplots",mar_divisor,"-",mar_widthLeft,".pdf"),width = 8,height = 8) # ORIGINAL
+pdf(file = paste0(OutDir,"/alignment_barplots",mar_divisor,"-",mar_widthLeft,".pdf"),width = 8,height = 9)
+
 # setup the panel layout
 layout(Raw_Reads_Matrix_matrix) 
 # need to set this for some reason
@@ -114,10 +146,15 @@ plot(1,type='n',axes=FALSE,xlab="",ylab="",main = "Sequencing Reads",cex.main=2)
 # set up the Legend in the first panel
 legend("bottom",legend=c("Deduplicated","Duplicated","Unaligned"),fill=BARPLOT_COLORS,bty = "n",ncol=length(BARPLOT_COLORS),cex=1.0)
 # plot margins # c(bottom, left, top, right) # default is c(5, 4, 4, 2) + 0.1
-par(mar=c(6,max(4.1,max(nchar(row.names(AlignmentStats)))/1.5),0,3)+ 0.1) 
+# par(mar=c(6,max(4.1,max(nchar(row.names(AlignmentStats)))/1.5),0,3)+ 0.1) # ORIGINAL 
+par(mar=c(6,mar_widthLeft,0,3)+ 0.1) 
+
 # create barplot for the two matrices
-barplot(Dup_Raw_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Number of reads (millions)") 
-barplot(Dup_Pcnt_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Percent of reads")
+# barplot(Dup_Raw_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Number of reads (millions)") 
+# barplot(Dup_Pcnt_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=0.7,xlab="Percent of reads")
+barplot(Dup_Raw_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=Names_scale,xlab="Number of reads (millions)",space=Space_scale) 
+barplot(Dup_Pcnt_Reads_Matrix,horiz = T,col=BARPLOT_COLORS,border=NA,las=1,cex.names=Names_scale,xlab="Percent of reads",space=Space_scale)
+
 dev.off()
 
 #
