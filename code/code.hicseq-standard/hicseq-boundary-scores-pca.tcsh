@@ -53,7 +53,8 @@ foreach method ($methods)
     cat $outdir/data.tsv | tools-table -c -n 6 | sed 's/ *$//' | tr -s ' ' '\t' >! $outdir/matrix.tsv
     scripts-perform-pca.r -v -o $outdir -L $outdir/labels.tsv --show-text --use-short-names --plain $outdir/matrix.tsv
     cp $outdir/report.qnorm.pdf $outdir/pca.$method.$k.pdf
-    rm -f $outdir/data.tsv $outdir/matrix.tsv $outdir/report.*.pdf
+    rm -f $outdir/data.tsv $outdir/report.*.pdf
+    #rm -f $outdir/matrix.tsv
   end
   @ m ++
 end

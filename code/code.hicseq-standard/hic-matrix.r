@@ -215,7 +215,7 @@ MatrixBoundaryScores <- function(x,distance,d2,skip,ignore)
   x[abs(row(x)-col(x))>distance] = 0   # values beyond distance cutoff are set to zero
   if (d2<=0) d2 = distance
   n = nrow(x)
-  labels = c('intra-left','intra-right','intra-max','intra-min','inter','diff','DI','ratio','diffratio','novel-max','novel-min')
+  labels = c('intra-left','intra-right','intra-max','intra-min','inter','diff','DI','ratio','diffratio','product-max','product-min')
   scores = matrix(0,n,length(labels))
   colnames(scores) = labels
   rownames(scores) = rownames(x)
@@ -269,13 +269,13 @@ MatrixBoundaryScores <- function(x,distance,d2,skip,ignore)
   scores[,'ratio'] = scores[,'intra-max']/(scores[,'inter']+pseudo)
   scores[,'diffratio'] = scores[,'diff']/(scores[,'inter']+pseudo)
 
-  # novel-max
-  scores[,'novel-max'] = scores[,'intra-max']/max(scores[,'intra-max'])*(1-scores[,'inter']/max(scores[,'inter']))
-  scores[,'novel-max'] = scores[,'novel-max']/max(scores[,'novel-max'])      # normalize to [0,1]
+  # product-max
+  scores[,'product-max'] = scores[,'intra-max']/max(scores[,'intra-max'])*(1-scores[,'inter']/max(scores[,'inter']))
+  scores[,'product-max'] = scores[,'product-max']/max(scores[,'product-max'])      # normalize to [0,1]
 
-  # novel-min
-  scores[,'novel-min'] = scores[,'intra-min']/max(scores[,'intra-min'])*(1-scores[,'inter']/max(scores[,'inter']))
-  scores[,'novel-min'] = scores[,'novel-min']/max(scores[,'novel-min'])      # normalize to [0,1]
+  # product-min
+  scores[,'product-min'] = scores[,'intra-min']/max(scores[,'intra-min'])*(1-scores[,'inter']/max(scores[,'inter']))
+  scores[,'product-min'] = scores[,'product-min']/max(scores[,'product-min'])      # normalize to [0,1]
 
   return(scores)
 }
@@ -1916,7 +1916,7 @@ op_domains <- function(cmdline_args)
     make_option(c("--distance"), default=5, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
     make_option(c("--distance2"), default=0, help="Distance from diagonal (in number of bins) used for boundary score computation [default \"%default\"]."),
     make_option(c("--skip-distance"), default=1, help="Distance from diagonal (in number of bins) to be skipped [default \"%default\"]."),
-    make_option(c("--method"), default="ratio", help="Boundary score method: ratio, diffratio, intra-max, intra-min, intra-right, intra-left, inter, diff, DI [default \"%default\"]."),
+    make_option(c("--method"), default="ratio", help="Boundary score method: ratio, diffratio, intra-max, intra-min, intra-right, intra-left, inter, diff, DI, product-max, product-min [default \"%default\"]."),
     make_option(c("--tolerance"), default=0.01, help="Percent difference cutoff for merging local maxima [default \"%default\"]."),
     make_option(c("-a","--alpha"), default=0.10, help="Minimum difference by which local maxima are greater than neighboring values [default \"%default\"]."),
     make_option(c("--flank-dist"), default=10, help="Local maxima neighborhood radius (in number of bins) [default \"%default\"]."),

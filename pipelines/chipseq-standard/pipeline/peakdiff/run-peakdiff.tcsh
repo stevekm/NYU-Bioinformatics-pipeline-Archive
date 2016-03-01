@@ -23,7 +23,7 @@ set opt = "$1"
 # setup
 set op = peakdiff
 set inpdirs = "inpdirs/matrices"
-set filter = "/matrices.[^/]*.nbins_[0-9][0-9]"
+set filter = "/matrices.[^/]*.nbins_1/"
 set results = results
 scripts-create-path $results/
 scripts-send2err "=== Operation = $op ============="

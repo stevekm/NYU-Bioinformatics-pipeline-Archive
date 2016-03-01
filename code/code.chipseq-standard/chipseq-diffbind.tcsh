@@ -59,7 +59,11 @@ foreach obj ($objects)
   echo "$obj,?,?,$db_factor,?,$db_block_factor,$treatment_bam,$control_bam,$macs_peaks_xls,macs" >> $diffbind_sample_sheet
 end
 
+<<<<<<< HEAD
 Rscript --vanilla ./code/scripts-diffbind.r $outdir $diffbind_sample_sheet $genome $diffbind_blocking_factor
+=======
+Rscript --vanilla ./code/chipseq-diffbind.R $outdir $diffbind_sample_sheet $genome $diffbind_blocking_factor
+>>>>>>> 0b6e0f65d5579a066d763917abbce39c634fbda6
 
 
 

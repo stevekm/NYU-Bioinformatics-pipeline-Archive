@@ -32,7 +32,7 @@ foreach d (__*)
   
   # check for errors
   scripts-send2err "Checking job log files for errors..."
-  find results/ -name 'job.*' -print0 | xargs -0 grep -iE 'usage|error|segmentation|not found|join.*sort|no such file|syntax|terminate' >&! error.log
+  ./code/code.main/pipeline-errors results >&! error.log
   if (`cat error.log | wc -l` > 0) then
     scripts-send2err "Errors encountered, aborting!"
     exit 1

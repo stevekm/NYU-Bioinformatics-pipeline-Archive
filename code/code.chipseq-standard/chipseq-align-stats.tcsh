@@ -36,9 +36,15 @@ scripts-create-path $outdir/
 # -------------------------------------
 
 # Generate barplots
+<<<<<<< HEAD
 echo  "$outdir is outdir" > ~/pipeline_test_output_bash.txt
 echo "$branch is branch" >> ~/pipeline_test_output_bash.txt
 echo "$objects is objects" >> ~/pipeline_test_output_bash.txt
+=======
+#echo  "$outdir is outdir" > ~/pipeline_test_output_bash.txt
+#echo "$branch is branch" >> ~/pipeline_test_output_bash.txt
+#echo "$objects is objects" >> ~/pipeline_test_output_bash.txt
+>>>>>>> 0b6e0f65d5579a066d763917abbce39c634fbda6
 
 Rscript ./code/chipseq-align-stats.R $outdir $branch "$objects"
 
