@@ -1,10 +1,7 @@
 #!/bin/tcsh
 
 # load all tools
-<<<<<<< HEAD
-=======
 module unload gcc
->>>>>>> 0b6e0f65d5579a066d763917abbce39c634fbda6
 module unload samtools
 module unload java
 module unload r
