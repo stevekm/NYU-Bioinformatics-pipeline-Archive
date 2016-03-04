@@ -9,6 +9,7 @@ module load samtools/1.2.1
 module load bedtools/2.22.0
 module load java/1.7
 module load picard-tools
+module load r/3.0.2
 
 # load tools required for each step of the pipeline (this can be overriden in local param scripts)
 module load bowtie2/2.2.6
