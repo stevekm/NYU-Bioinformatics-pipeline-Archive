@@ -1,3 +1,7 @@
+This is an archived version of the original repository. 
+
+---
+
 # NYU GTC Bioinformatic Analysis Pipelines
 
 This is the main repository for THE bioinformatics pipelines. 
