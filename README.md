@@ -1,4 +1,5 @@
-This is an archived version of the original repository. 
+This is an archived version of the original repository, located here: https://github.com/NYULMC-GTC/pipeline-master
+
 
 ---
 
