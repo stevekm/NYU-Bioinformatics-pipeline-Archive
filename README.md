@@ -1,4 +1,4 @@
-This is an archived version of the original repository, located here: https://github.com/NYULMC-GTC/pipeline-master
+This is an archived version of the original repository, located here: https://github.com/NYU-BFX/hic-bench
 
 
 ---
